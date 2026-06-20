@@ -69,12 +69,45 @@ supabase/migrations/001_schema.sql
 ## Session Status (June 20, 2026)
 - ✅ Build passes (14 routes, 0 errors)
 - ✅ All UI components created
-- ✅ Database schema migration ready
+- ✅ Database schema migration run on Supabase
 - ✅ API routes for report generation + brand scanning
-- ❌ Need Supabase project setup + .env values
+- ✅ Supabase project setup with URL + anon key
+- ✅ Deployed on Vercel (github.com/gigimento/agencytools)
+- ✅ Auth working (register/login with Supabase)
+- ✅ Narrative Reports — generating with LLM
+- ❌ Brand Radar scan — needs OpenRouter model fix (deploying)
 - ❌ Need Lemon Squeezy account
 - ❌ Need Resend API key
-- ❌ Need to deploy on Vercel
+
+## Session Learnings (2026-06-20)
+
+### OpenRouter Models (Critical)
+- `anthropic/claude-3.5-sonnet` is **removed** from OpenRouter — use `anthropic/claude-sonnet-4.6` instead
+- `meta-llama/llama-3.3-70b-instruct` has a **free tier**: `meta-llama/llama-3.3-70b-instruct:free`
+- Always check available models via `GET https://openrouter.ai/api/v1/models`
+
+### Vercel Deployment
+- After adding env vars in Vercel dashboard, you MUST **Redeploy** (Deployments → Redeploy) for them to take effect
+- Vercel free tier has **10s function timeout** — sequential LLM calls can exceed this
+- Force push (`git push --force`) triggers a new deployment
+
+### Git on Windows
+- `git config user.email` must match GitHub account email or Vercel blocks deployment
+- Force push after amending commits works but resets deployment history
+- Default git email `igor@akytec.com` was found nowhere in source files, only in commit history
+
+### Supabase
+- **Email auth provider** is disabled by default — must be enabled in Authentication → Providers
+- Site URL and Redirect URLs must be configured for auth to work
+- Anon key from Supabase Settings → API is a JWT, not `sb_publishable_` format
+- SQL migration runs reliably via Supabase SQL Editor
+
+### Landing Page Design
+- Global palette: `#27262E` bg, `#E19C63` accent, `#8BA5BE` secondary
+- CSS gradients + radial gradients work well for visual interest without images
+- Bento grid for features section is cleaner than plain cards
+- Stats section adds credibility (85% retained, 10x read rate, 50+ LLMs)
+- Remove anchor nav links that point to same-page sections (redundant)
 
 ## Exit Strategy
 Target Acquire.com at $3-5k MRR (6-9 months). Bundle sale potential: Semrush, Ahrefs, AgencyAnalytics.
