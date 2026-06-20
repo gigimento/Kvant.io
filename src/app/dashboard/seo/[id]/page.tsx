@@ -1,0 +1,88 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { ArrowLeft, Search, Loader2, Sparkles } from "lucide-react"
+import Link from "next/link"
+import { formatDate } from "@/lib/utils"
+
+export default function MonitorDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const [monitor, setMonitor] = useState<any>(null)
+  const [mentions, setMentions] = useState<any[]>([])
+  const [scanning, setScanning] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  async function loadData() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push("/login"); return }
+    const { data: mon } = await supabase.from("brand_monitors").select("*").eq("id", params.id).single()
+    setMonitor(mon)
+    const { data: mnts } = await supabase.from("brand_mentions").select("*").eq("monitor_id", params.id).order("scanned_at", { ascending: false })
+    setMentions(mnts || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { loadData() }, [params.id])
+
+  async function handleScan() {
+    setScanning(true)
+    const res = await fetch("/api/seo/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ monitorId: params.id }) })
+    if (res.ok) await loadData()
+    setScanning(false)
+  }
+
+  const positiveMentions = mentions.filter((m) => m.sentiment === "positive").length
+  const totalMentions = mentions.length
+
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>
+  if (!monitor) return <div className="text-center py-16"><p className="text-muted-foreground">Monitor not found.</p><Button className="mt-4" asChild><Link href="/dashboard/seo">Back</Link></Button></div>
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-start justify-between">
+        <div>
+          <Link href="/dashboard/seo" className="mb-2 flex items-center gap-1 text-sm text-muted-foreground hover:text-white transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Link>
+          <h1 className="text-2xl font-bold">{monitor.brand_name}</h1>
+          <p className="text-muted-foreground">{(monitor.competitors as any[])?.join(", ") || "No competitors"} &middot; {monitor.schedule}</p>
+        </div>
+        <Button onClick={handleScan} disabled={scanning}>
+          {scanning ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Scanning...</> : <><Sparkles className="mr-1 h-4 w-4" /> Run Scan</>}
+        </Button>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Scans</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalMentions}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Positive Mentions</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-400">{positiveMentions}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Sentiment Score</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalMentions > 0 ? Math.round((positiveMentions / totalMentions) * 100) : 0}%</div></CardContent></Card>
+      </div>
+
+      {mentions.length === 0 ? (
+        <Card className="text-center py-12"><CardContent><Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground" /><h3 className="font-semibold">No scans yet</h3><p className="mt-2 text-sm text-muted-foreground">Run your first scan.</p></CardContent></Card>
+      ) : (
+        <div className="space-y-3">
+          {mentions.map((m) => (
+            <Card key={m.id}>
+              <CardHeader className="flex flex-row items-center justify-between py-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant={m.sentiment === "positive" ? "success" : m.sentiment === "negative" ? "danger" : "secondary"}>{m.sentiment}</Badge>
+                  <span className="text-sm font-medium">{m.query}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{formatDate(m.scanned_at)}</span>
+              </CardHeader>
+              {m.context_snippet && <CardContent className="pb-3"><p className="text-xs text-muted-foreground line-clamp-3">{m.context_snippet}</p></CardContent>}
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
