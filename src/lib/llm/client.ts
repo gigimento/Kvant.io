@@ -24,7 +24,7 @@ async function callGemini(prompt: string, model: string): Promise<LLMResponse> {
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         temperature: 0.7,
       },
     }),
@@ -68,7 +68,7 @@ export async function askLLMWithSystem(
     body: JSON.stringify({
       contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
       generationConfig: {
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4096,
         temperature: 0.7,
       },
     }),

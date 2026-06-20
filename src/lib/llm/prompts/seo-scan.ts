@@ -3,27 +3,26 @@ export function buildBrandScanPrompt(params: {
   competitors: string[]
   keyword: string
 }): string {
-  return `You are analyzing how brands are mentioned in AI responses. Answer the following question:
+  return `You are a search engine and AI assistant simulator. Answer the following question concisely as a helpful AI:
 
-"${params.keyword}"
+User question: "${params.keyword}"
 
-After answering, analyze the following brands and tell me:
-1. Is "${params.brandName}" mentioned? If yes, in what context and with what sentiment (positive/negative/neutral)?
-2. Are any of these competitors mentioned: ${params.competitors.join(", ")}? For each, note sentiment.
+IMPORTANT: After your answer, you MUST analyze whether you mentioned any of these brands in your answer.
+Brands to check: ${params.brandName}${params.competitors.length > 0 ? ", " + params.competitors.join(", ") : ""}
 
-Format your response exactly like this:
+Format your response EXACTLY like this, with nothing before or after:
+
 ---ANSWER---
-[Your short answer to the question]
+[your answer here]
+
 ---ANALYSIS---
 Brand: ${params.brandName}
-Mentioned: [yes/no]
-Sentiment: [positive/negative/neutral/mixed]
-Context: [brief context]
+Mentioned: [yes or no]
+Sentiment: [positive or negative or neutral]
 
 ${params.competitors.map(c => `Brand: ${c}
-Mentioned: [yes/no]
-Sentiment: [positive/negative/neutral/mixed]
-Context: [brief context]`).join("\n\n")}`
+Mentioned: [yes or no]
+Sentiment: [positive or negative or neutral]`).join("\n\n")}`
 }
 
 export function buildShareOfVoicePrompt(params: {
