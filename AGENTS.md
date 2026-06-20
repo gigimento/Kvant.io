@@ -102,6 +102,17 @@ When switching providers, libraries, or making any cross-cutting change:
 
 Skipping any of these steps silently creates production bugs.
 
+## Hard Rule: RLS Policies Must Match All CRUD Operations
+
+When adding ANY feature that writes to Supabase (INSERT, UPDATE, DELETE, soft delete):
+
+1. **Check RLS policies FIRST** — `SELECT * FROM pg_policies WHERE tablename = 'table_name'`
+2. **Every operation type needs a policy** — just because SELECT works doesn't mean UPDATE/DELETE do
+3. **Missing UPDATE policy** silently swallows `.update()` calls — no error, nothing happens
+4. **Always create policies for ALL 4 operations** (SELECT, INSERT, UPDATE, DELETE) on every new table
+5. **Use `auth.uid()` pattern consistently** — or subquery via related table for indirect ownership
+6. **Migration from scratch** vs **manual SQL fix** — manually applied SQL must be synced back to migration files
+
 ### Vercel Deployment
 - After adding env vars in Vercel dashboard, you MUST **Redeploy** (Deployments → Redeploy) for them to take effect
 - Vercel free tier has **10s function timeout** — sequential LLM calls can exceed this
