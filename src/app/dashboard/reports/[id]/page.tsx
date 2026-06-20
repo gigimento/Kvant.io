@@ -26,7 +26,7 @@ export default function ReportDetailPage() {
     const { data: cfg } = await supabase.from("report_configs").select("*").eq("id", params.id).single()
     setConfig(cfg)
 
-    const { data: rpts } = await supabase.from("reports").select("*").eq("config_id", params.id).order("created_at", { ascending: false })
+    const { data: rpts } = await supabase.from("reports").select("*").eq("config_id", params.id).is("deleted_at", null).order("created_at", { ascending: false })
     setReports(rpts || [])
     setLoading(false)
   }
@@ -107,7 +107,11 @@ export default function ReportDetailPage() {
                   onClick={async () => {
                     if (!confirm("Delete this report?")) return
                     const supabase = createClient()
-                    await supabase.from("reports").delete().eq("id", report.id)
+                    const { error } = await supabase
+                      .from("reports")
+                      .update({ deleted_at: new Date().toISOString() })
+                      .eq("id", report.id)
+                    if (error) alert(`Delete failed: ${error.message}`)
                     loadData()
                   }}
                 >
