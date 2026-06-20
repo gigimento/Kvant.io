@@ -33,9 +33,19 @@ export default function MonitorDetailPage() {
 
   async function handleScan() {
     setScanning(true)
-    const res = await fetch("/api/seo/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ monitorId: params.id }) })
-    if (res.ok) await loadData()
-    setScanning(false)
+    try {
+      const res = await fetch("/api/seo/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ monitorId: params.id }) })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Scan failed: ${err.error || res.statusText}`)
+        return
+      }
+      await loadData()
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`)
+    } finally {
+      setScanning(false)
+    }
   }
 
   const positiveMentions = mentions.filter((m) => m.sentiment === "positive").length

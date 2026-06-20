@@ -35,13 +35,23 @@ export default function ReportDetailPage() {
 
   async function handleGenerate() {
     setGenerating(true)
-    const res = await fetch("/api/reports/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ configId: params.id }),
-    })
-    if (res.ok) await loadData()
-    setGenerating(false)
+    try {
+      const res = await fetch("/api/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ configId: params.id }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Generation failed: ${err.error || res.statusText}`)
+        return
+      }
+      await loadData()
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`)
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>
