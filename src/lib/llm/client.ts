@@ -3,7 +3,7 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 export type LLMModel = "claude" | "groq"
 
 const MODEL_MAP: Record<LLMModel, string> = {
-  claude: "anthropic/claude-sonnet-4.6",
+  claude: "meta-llama/llama-3.3-70b-instruct:free",
   groq: "meta-llama/llama-3.3-70b-instruct:free",
 }
 
@@ -32,7 +32,7 @@ export async function askLLM(
     body: JSON.stringify({
       model: MODEL_MAP[model],
       messages: [{ role: "user", content: prompt }],
-      max_tokens: 4096,
+      max_tokens: 1024,
       temperature: 0.7,
     }),
   })
@@ -45,7 +45,7 @@ export async function askLLM(
   const data = await response.json()
 
   return {
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content ?? "",
     model: data.model,
     usage: data.usage,
   }
@@ -70,7 +70,7 @@ export async function askLLMWithSystem(
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 4096,
+      max_tokens: 1024,
       temperature: 0.7,
     }),
   })
@@ -83,7 +83,7 @@ export async function askLLMWithSystem(
   const data = await response.json()
 
   return {
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content ?? "",
     model: data.model,
     usage: data.usage,
   }
