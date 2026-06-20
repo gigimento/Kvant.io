@@ -3,8 +3,8 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 export type LLMModel = "claude" | "groq"
 
 const MODEL_MAP: Record<LLMModel, string> = {
-  claude: "anthropic/claude-3.5-sonnet",
-  groq: "meta-llama/llama-3.3-70b-instruct",
+  claude: "anthropic/claude-sonnet-4.6",
+  groq: "meta-llama/llama-3.3-70b-instruct:free",
 }
 
 interface LLMResponse {
