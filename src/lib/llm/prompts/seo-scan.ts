@@ -36,6 +36,5 @@ List the brands you'd mention and assign each a percentage representing how like
 
 Brands to consider: ${params.brandName}, ${params.competitors.join(", ")}
 
-Format your response as JSON:
-{"brands": [{"name": "...", "share": number, "reason": "..."}]}`
+Respond in plain text. Do NOT use JSON or markdown.`
 }
