@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, FileText, Loader2, Sparkles } from "lucide-react"
+import { ArrowLeft, FileText, Loader2, Sparkles, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 
@@ -99,6 +99,21 @@ export default function ReportDetailPage() {
                   </div>
                 </CardContent>
               )}
+              <div className="px-6 pb-4 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  onClick={async () => {
+                    if (!confirm("Delete this report?")) return
+                    const supabase = createClient()
+                    await supabase.from("reports").delete().eq("id", report.id)
+                    loadData()
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
