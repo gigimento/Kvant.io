@@ -45,7 +45,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            Agency<span className="text-accent">Tools</span>
+            Kvant
           </Link>
           <CardTitle className="mt-4">Create Account</CardTitle>
           <CardDescription>Start your free trial</CardDescription>

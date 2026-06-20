@@ -1,4 +1,4 @@
-# Agency Tools Suite — Implementation Plan
+# Kvant — Implementation Plan
 
 > **Products:** Narrative-Style Agency Reporting (#2) + LLM SEO Radar (#3)
 > **Created:** June 20, 2026

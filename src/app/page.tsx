@@ -86,7 +86,7 @@ export default function MarketingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-primary/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            Agency<span className="text-accent">Tools</span>
+            Kvant
           </Link>
           <nav className="hidden items-center gap-6 sm:flex">
             <Link href="/login" className="text-sm text-muted-foreground hover:text-white transition-colors">
@@ -266,7 +266,7 @@ export default function MarketingPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-8">
         <div className="mx-auto max-w-7xl px-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Agency Tools. All rights reserved.
+          &copy; {new Date().getFullYear()} Kvant. All rights reserved.
         </div>
       </footer>
     </div>

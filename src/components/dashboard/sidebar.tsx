@@ -39,7 +39,7 @@ export function Sidebar() {
     <aside className="flex w-64 flex-col border-r border-white/5 bg-primary/50">
       <div className="flex h-16 items-center gap-2 border-b border-white/5 px-6">
         <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-          Agency<span className="text-accent">Tools</span>
+          Kvant
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">

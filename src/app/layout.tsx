@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Agency Tools — Smart Reports & AI Brand Monitoring",
+  title: "Kvant — Smart Reports & AI Brand Monitoring",
   description: "Narrative-style client reports for marketing agencies + AI brand visibility monitoring across LLMs.",
 }
 

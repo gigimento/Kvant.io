@@ -42,7 +42,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <Link href="/" className="text-lg font-bold tracking-tight">
-            Agency<span className="text-accent">Tools</span>
+            Kvant
           </Link>
           <CardTitle className="mt-4">Sign In</CardTitle>
           <CardDescription>Access your dashboard</CardDescription>
