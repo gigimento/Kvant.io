@@ -83,8 +83,8 @@ supabase/migrations/001_schema.sql
 
 ### LLM Stack
 - **Google Gemini** (60 req/min free) — both report generation and SEO scans
-- `fast` model: `gemini-2.0-flash` (SEO scans)
-- `quality` model: `gemini-1.5-flash` (report narratives)
+- `fast` model: `gemini-3.1-flash-lite` (SEO scans)
+- `quality` model: `gemini-3.1-flash-lite` (report narratives)
 - API key: `GOOGLE_AI_API_KEY` in env
 - **No longer using OpenRouter** — was rate-limited and paid-only
 

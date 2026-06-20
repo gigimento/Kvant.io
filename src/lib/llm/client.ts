@@ -1,8 +1,8 @@
 export type LLMModel = "fast" | "quality"
 
 const MODEL_MAP: Record<LLMModel, string> = {
-  fast: "gemini-2.0-flash",
-  quality: "gemini-1.5-flash",
+  fast: "gemini-3.1-flash-lite",
+  quality: "gemini-3.1-flash-lite",
 }
 
 interface LLMResponse {
