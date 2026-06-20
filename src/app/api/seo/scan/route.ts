@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         await supabase.from("brand_mentions").insert({
           monitor_id: monitorId,
           query: keyword,
-          llm_provider: "groq",
+          llm_provider: "gemini",
           brand_mentioned: mentioned,
           sentiment,
           context_snippet: response.content.slice(0, 500),
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         await supabase.from("brand_mentions").insert({
           monitor_id: monitorId,
           query: `[SOV] ${monitor.keywords[0]}`,
-          llm_provider: "groq",
+          llm_provider: "gemini",
           brand_mentioned: true,
           sentiment: "neutral",
           context_snippet: sovResponse.content.slice(0, 500),

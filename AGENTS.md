@@ -81,10 +81,12 @@ supabase/migrations/001_schema.sql
 
 ## Session Learnings (2026-06-20)
 
-### OpenRouter Models (Critical)
-- `anthropic/claude-3.5-sonnet` is **removed** from OpenRouter — use `anthropic/claude-sonnet-4.6` instead
-- `meta-llama/llama-3.3-70b-instruct` has a **free tier**: `meta-llama/llama-3.3-70b-instruct:free`
-- Always check available models via `GET https://openrouter.ai/api/v1/models`
+### LLM Stack
+- **Google Gemini** (60 req/min free) — both report generation and SEO scans
+- `fast` model: `gemini-2.0-flash` (SEO scans)
+- `quality` model: `gemini-1.5-flash` (report narratives)
+- API key: `GOOGLE_AI_API_KEY` in env
+- **No longer using OpenRouter** — was rate-limited and paid-only
 
 ### Vercel Deployment
 - After adding env vars in Vercel dashboard, you MUST **Redeploy** (Deployments → Redeploy) for them to take effect
