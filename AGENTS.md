@@ -88,6 +88,20 @@ supabase/migrations/001_schema.sql
 - API key: `GOOGLE_AI_API_KEY` in env
 - **No longer using OpenRouter** — was rate-limited and paid-only
 
+## Hard Rule: Full Code Audit on Provider/Architecture Changes
+
+When switching providers, libraries, or making any cross-cutting change:
+
+1. **Search entire codebase** for the old name — `grep` all `*.{ts,tsx,js,md,sql,env}` files
+2. **Check every file** that references the old provider — not just the core library
+3. **Update AGENTS.md** — old references become stale immediately
+4. **Verify build** — `npm run build` must pass
+5. **Stale env vars in Vercel** — remove old ones AND add new ones; redeploy
+6. **Review ALL API routes** that call the changed function — verify model params are updated (e.g. `"claude"` → `"quality"`, `"groq"` → `"fast"`)
+7. **Check DB schema** — stored provider names in tables must match reality (e.g. `llm_provider: "groq"` → `"gemini"`)
+
+Skipping any of these steps silently creates production bugs.
+
 ### Vercel Deployment
 - After adding env vars in Vercel dashboard, you MUST **Redeploy** (Deployments → Redeploy) for them to take effect
 - Vercel free tier has **10s function timeout** — sequential LLM calls can exceed this
