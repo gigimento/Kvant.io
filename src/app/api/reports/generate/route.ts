@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       const llmResponse = await askLLMWithSystem(
         "You are a senior marketing analyst writing client reports. Write in clear, professional English. Be specific and data-driven.",
         prompt,
-        "claude"
+        "quality"
       )
 
       await supabase

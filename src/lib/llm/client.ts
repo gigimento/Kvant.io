@@ -1,10 +1,8 @@
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-
-export type LLMModel = "claude" | "groq"
+export type LLMModel = "fast" | "quality"
 
 const MODEL_MAP: Record<LLMModel, string> = {
-  claude: "meta-llama/llama-3.3-70b-instruct:free",
-  groq: "meta-llama/llama-3.3-70b-instruct:free",
+  fast: "gemini-2.0-flash",
+  quality: "gemini-1.5-flash",
 }
 
 interface LLMResponse {
@@ -17,74 +15,79 @@ interface LLMResponse {
   }
 }
 
-export async function askLLM(
-  prompt: string,
-  model: LLMModel = "groq"
-): Promise<LLMResponse> {
-  const response = await fetch(OPENROUTER_URL, {
+async function callGemini(prompt: string, model: string): Promise<LLMResponse> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`
+
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      "X-Title": "Agency Tools",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL_MAP[model],
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1024,
-      temperature: 0.7,
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      },
     }),
   })
 
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`LLM API error: ${response.status} ${error}`)
+    throw new Error(`Gemini API error: ${response.status} ${error}`)
   }
 
   const data = await response.json()
 
   return {
-    content: data.choices?.[0]?.message?.content ?? "",
-    model: data.model,
-    usage: data.usage,
+    content: data.candidates?.[0]?.content?.parts?.[0]?.text ?? "",
+    model: data.modelVersion ?? model,
+    usage: {
+      prompt_tokens: data.usageMetadata?.promptTokenCount ?? 0,
+      completion_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+      total_tokens: data.usageMetadata?.totalTokenCount ?? 0,
+    },
   }
+}
+
+export async function askLLM(
+  prompt: string,
+  model: LLMModel = "fast"
+): Promise<LLMResponse> {
+  return callGemini(prompt, MODEL_MAP[model])
 }
 
 export async function askLLMWithSystem(
   systemPrompt: string,
   userPrompt: string,
-  model: LLMModel = "groq"
+  model: LLMModel = "fast"
 ): Promise<LLMResponse> {
-  const response = await fetch(OPENROUTER_URL, {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_MAP[model]}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`
+
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      "X-Title": "Agency Tools",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL_MAP[model],
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_tokens: 1024,
-      temperature: 0.7,
+      contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.7,
+      },
     }),
   })
 
   if (!response.ok) {
     const error = await response.text()
-    throw new Error(`LLM API error: ${response.status} ${error}`)
+    throw new Error(`Gemini API error: ${response.status} ${error}`)
   }
 
   const data = await response.json()
 
   return {
-    content: data.choices?.[0]?.message?.content ?? "",
-    model: data.model,
-    usage: data.usage,
+    content: data.candidates?.[0]?.content?.parts?.[0]?.text ?? "",
+    model: data.modelVersion ?? MODEL_MAP[model],
+    usage: {
+      prompt_tokens: data.usageMetadata?.promptTokenCount ?? 0,
+      completion_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+      total_tokens: data.usageMetadata?.totalTokenCount ?? 0,
+    },
   }
 }

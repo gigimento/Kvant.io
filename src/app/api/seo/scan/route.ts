@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       })
 
       try {
-        const response = await askLLM(prompt, "groq")
+        const response = await askLLM(prompt, "fast")
 
         // Parse mention from response
         const mentioned = response.content
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           competitors: monitor.competitors || [],
           keyword: monitor.keywords[0],
         })
-        const sovResponse = await askLLM(sovPrompt, "groq")
+        const sovResponse = await askLLM(sovPrompt, "fast")
 
         await supabase.from("brand_mentions").insert({
           monitor_id: monitorId,
