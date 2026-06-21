@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, FileText, Loader2, Sparkles, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { SubscriptionGate } from "@/components/dashboard/subscription-gate"
 
 export default function ReportDetailPage() {
   const params = useParams()
@@ -58,6 +59,7 @@ export default function ReportDetailPage() {
   if (!config) return <div className="text-center py-16"><p className="text-muted-foreground">Report not found.</p><Button className="mt-4" asChild><Link href="/dashboard/reports">Back</Link></Button></div>
 
   return (
+    <SubscriptionGate>
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
@@ -123,5 +125,6 @@ export default function ReportDetailPage() {
         </div>
       )}
     </div>
+    </SubscriptionGate>
   )
 }

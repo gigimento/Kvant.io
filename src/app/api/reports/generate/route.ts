@@ -2,12 +2,18 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { askLLMWithSystem } from "@/lib/llm/client"
 import { buildNarrativePrompt } from "@/lib/llm/prompts/narrative"
+import { checkServerAccess } from "@/lib/subscription-guard"
 
 export async function POST(request: Request) {
   try {
     const { configId } = await request.json()
     if (!configId) {
       return NextResponse.json({ error: "configId required" }, { status: 400 })
+    }
+
+    const access = await checkServerAccess()
+    if (!access.allowed) {
+      return NextResponse.json({ error: "Subscription required. Subscribe to generate reports." }, { status: 402 })
     }
 
     const supabase = await createClient()

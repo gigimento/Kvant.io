@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Search, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
+import { SubscriptionGate } from "@/components/dashboard/subscription-gate"
 
 export default function MonitorDetailPage() {
   const params = useParams()
@@ -55,6 +56,7 @@ export default function MonitorDetailPage() {
   if (!monitor) return <div className="text-center py-16"><p className="text-muted-foreground">Monitor not found.</p><Button className="mt-4" asChild><Link href="/dashboard/seo">Back</Link></Button></div>
 
   return (
+    <SubscriptionGate>
     <div className="space-y-8">
       <div className="flex items-start justify-between">
         <div>
@@ -94,5 +96,6 @@ export default function MonitorDetailPage() {
         </div>
       )}
     </div>
+    </SubscriptionGate>
   )
 }
