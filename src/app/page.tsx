@@ -266,7 +266,12 @@ export default function MarketingPage() {
       {/* Footer */}
       <footer className="border-t border-white/5 py-8">
         <div className="mx-auto max-w-7xl px-6 text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Kvant. All rights reserved.
+          <p>&copy; {new Date().getFullYear()} Kvant. All rights reserved.</p>
+          <div className="mt-3 flex items-center justify-center gap-6">
+            <Link href="/terms" className="hover:text-accent transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
+            <Link href="/refund" className="hover:text-accent transition-colors">Refund Policy</Link>
+          </div>
         </div>
       </footer>
     </div>
