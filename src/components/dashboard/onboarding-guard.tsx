@@ -19,7 +19,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         .from("profiles")
         .select("onboarding_completed")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
       if (!profile?.onboarding_completed) {
         router.push("/onboarding")
         return

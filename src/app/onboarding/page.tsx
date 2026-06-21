@@ -23,6 +23,7 @@ export default function OnboardingPage() {
   const [fullName, setFullName] = useState("")
   const [companyName, setCompanyName] = useState("")
   const [role, setRole] = useState("")
+  const [error, setError] = useState("")
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function OnboardingPage() {
         .from("profiles")
         .select("onboarding_completed, full_name, company_name, role")
         .eq("user_id", user.id)
-        .single()
+        .maybeSingle()
       if (profile?.onboarding_completed) {
         router.push("/dashboard")
         return
@@ -50,29 +51,50 @@ export default function OnboardingPage() {
 
   async function saveAndNext() {
     setSaving(true)
+    setError("")
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from("profiles").upsert({
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (!user || userError) {
+      setError(userError?.message || "User not found. Please sign in again.")
+      setSaving(false)
+      return
+    }
+    const { error: upsertError } = await supabase.from("profiles").upsert({
       user_id: user.id,
       full_name: fullName,
       company_name: companyName,
       role: role || null,
     })
+    if (upsertError) {
+      setError(`Failed to save: ${upsertError.message}`)
+      setSaving(false)
+      return
+    }
     setSaving(false)
     setStep(1)
   }
 
   async function completeOnboarding() {
     setSaving(true)
+    setError("")
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from("profiles").update({
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (!user || userError) {
+      setError(userError?.message || "User not found.")
+      setSaving(false)
+      return
+    }
+    const { error: updateError } = await supabase.from("profiles").update({
       onboarding_completed: true,
     }).eq("user_id", user.id)
+    if (updateError) {
+      setError(`Failed to complete: ${updateError.message}`)
+      setSaving(false)
+      return
+    }
     setSaving(false)
     router.push("/dashboard")
+    router.refresh()
   }
 
   if (loading) {
@@ -122,6 +144,7 @@ export default function OnboardingPage() {
                   <option value="business">Business Owner</option>
                 </select>
               </div>
+              {error && <p className="text-sm text-red-400">{error}</p>}
               <Button onClick={saveAndNext} className="w-full" disabled={saving || !fullName}>
                 {saving ? "Saving..." : "Continue"} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
@@ -155,6 +178,7 @@ export default function OnboardingPage() {
                   </button>
                 )
               })}
+              {error && <p className="text-sm text-red-400">{error}</p>}
               <Button onClick={completeOnboarding} className="w-full" disabled={saving}>
                 {saving ? "Setting up..." : "Go to Dashboard"} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
