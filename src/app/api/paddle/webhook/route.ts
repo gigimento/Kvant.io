@@ -21,36 +21,43 @@ export async function POST(request: Request) {
 
     const supabase = await createClient()
 
-    switch (eventType) {
-      case "transaction.completed": {
-        const tx = event.data
-        const email = tx.customer?.email
-        if (!email) break
+    async function handleTransaction(tx: any) {
+      const email = tx.customer?.email
+      if (!email) return
 
-        // Find user by email
-        const { data: users } = await supabase.auth.admin.listUsers()
-        const user = users?.users?.find((u: any) => u.email === email)
-        if (!user) break
+      const { data: users } = await supabase.auth.admin.listUsers()
+      const user = users?.users?.find((u: any) => u.email === email)
+      if (!user) return
 
-        const items = tx.items || []
-        const priceId = items[0]?.price?.id || ""
-        const plan = priceId.includes("yearly") ? "yearly" : "monthly"
-        const product = "combined"
+      const items = tx.items || []
+      const priceId = items[0]?.price?.id || ""
+      const plan = priceId.includes("yearly") ? "yearly" : "monthly"
 
-        await supabase.from("subscriptions").upsert({
+      // Upsert subscription — match on paddle_subscription_id to handle renewals
+      await supabase
+        .from("subscriptions")
+        .upsert({
           user_id: user.id,
           paddle_subscription_id: tx.subscription_id?.toString(),
-          product,
+          product: "combined",
           status: "active",
           plan,
           current_period_start: tx.billing_period?.starts_at || new Date().toISOString(),
           current_period_end: tx.billing_period?.ends_at || new Date().toISOString(),
-        })
+        }, { onConflict: "paddle_subscription_id" })
 
+      // Avoid duplicate billing history rows
+      const { data: existing } = await supabase
+        .from("billing_history")
+        .select("id")
+        .eq("paddle_transaction_id", tx.id)
+        .maybeSingle()
+
+      if (!existing) {
         await supabase.from("billing_history").insert({
           user_id: user.id,
           paddle_transaction_id: tx.id,
-          product,
+          product: "combined",
           plan,
           amount: tx.details?.totals?.grand_total
             ? parseFloat(tx.details.totals.grand_total) / 100
@@ -60,6 +67,13 @@ export async function POST(request: Request) {
           period_start: tx.billing_period?.starts_at,
           period_end: tx.billing_period?.ends_at,
         })
+      }
+    }
+
+    switch (eventType) {
+      case "transaction.completed":
+      case "transaction.paid": {
+        await handleTransaction(event.data)
         break
       }
 
@@ -80,6 +94,23 @@ export async function POST(request: Request) {
         await supabase
           .from("subscriptions")
           .update({ status: "cancelled" })
+          .eq("paddle_subscription_id", sub.id.toString())
+        break
+      }
+
+      case "subscription.updated": {
+        const sub = event.data
+        const status = sub.status === "active" ? "active"
+          : sub.status === "canceled" ? "cancelled"
+          : sub.status === "past_due" ? "past_due"
+          : sub.status
+
+        await supabase
+          .from("subscriptions")
+          .update({
+            status,
+            current_period_end: sub.current_billing_period?.ends_at,
+          })
           .eq("paddle_subscription_id", sub.id.toString())
         break
       }
