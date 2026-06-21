@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/generate-reports",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/scan-brands",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}

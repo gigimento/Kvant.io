@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, LogOut } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
@@ -22,6 +22,16 @@ const navItems = [
     href: "/dashboard/seo",
     label: "Brand Radar",
     icon: Search,
+  },
+  {
+    href: "/dashboard/connections",
+    label: "Connections",
+    icon: Link2,
+  },
+  {
+    href: "/dashboard/subscriptions",
+    label: "Subscriptions",
+    icon: CreditCard,
   },
 ]
 
