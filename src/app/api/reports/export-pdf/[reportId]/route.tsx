@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { renderToStream } from "@react-pdf/renderer"
 import { ReportPDF } from "@/components/reports/report-pdf"
+import { checkServerAccess } from "@/lib/subscription-guard"
 
 export async function GET(request: Request, { params }: { params: Promise<{ reportId: string }> }) {
   try {
@@ -11,6 +12,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ repo
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const access = await checkServerAccess()
+    if (!access.allowed) {
+      return NextResponse.json({ error: access.reason === "subscription_required" ? "Subscription required. Start a free trial to access this feature." : "Unauthorized" }, { status: 402 })
     }
 
     const { data: report, error } = await supabase

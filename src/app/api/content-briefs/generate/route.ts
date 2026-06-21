@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { askLLMWithSystem } from "@/lib/llm/client"
 import { buildContentBriefPrompt } from "@/lib/llm/prompts/content-brief"
+import { checkServerAccess } from "@/lib/subscription-guard"
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +16,11 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const access = await checkServerAccess()
+    if (!access.allowed) {
+      return NextResponse.json({ error: access.reason === "subscription_required" ? "Subscription required. Start a free trial to access this feature." : "Unauthorized" }, { status: 402 })
     }
 
     const { systemPrompt, userPrompt } = buildContentBriefPrompt({

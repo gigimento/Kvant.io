@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 interface PageProps {
   params: Promise<{ token: string }>
@@ -7,9 +7,9 @@ interface PageProps {
 
 export default async function SharePage({ params }: PageProps) {
   const { token } = await params
-  const admin = createAdminClient()
+  const supabase = await createClient()
 
-  const { data: link } = await admin
+  const { data: link } = await supabase
     .from("client_share_links")
     .select("report_id, expires_at, created_at")
     .eq("token", token)
@@ -23,7 +23,7 @@ export default async function SharePage({ params }: PageProps) {
     notFound()
   }
 
-  const { data: report } = await admin
+  const { data: report } = await supabase
     .from("reports")
     .select("id, client_name, narrative_text, raw_data, period_start, period_end, created_at")
     .eq("id", link.report_id)
@@ -36,7 +36,7 @@ export default async function SharePage({ params }: PageProps) {
   const rawData = report.raw_data as Record<string, any> | null
   const metrics = rawData?.metrics as Record<string, any> | null
 
-  const { data: reportConfig } = await admin
+  const { data: reportConfig } = await supabase
     .from("report_configs")
     .select("name, user_id")
     .eq("id", report.id)
@@ -44,7 +44,7 @@ export default async function SharePage({ params }: PageProps) {
 
   let brandSettings: Record<string, string> = {}
   if (reportConfig?.user_id) {
-    const { data: profile } = await admin
+      const { data: profile } = await supabase
       .from("profiles")
       .select("brand_settings")
       .eq("user_id", reportConfig.user_id)

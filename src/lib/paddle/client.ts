@@ -36,7 +36,7 @@ export class PaddleClient {
     return this.request(`/prices?product_id=${productId}`)
   }
 
-  async createTransaction(items: { priceId: string; quantity: number }[], customerEmail?: string) {
+  async createTransaction(items: { priceId: string; quantity: number }[], customerEmail?: string, customData?: Record<string, string>) {
     const body: any = {
       items: items.map((i) => ({
         price_id: i.priceId,
@@ -46,6 +46,10 @@ export class PaddleClient {
 
     if (customerEmail) {
       body.customer = { email: customerEmail }
+    }
+
+    if (customData) {
+      body.custom_data = customData
     }
 
     return this.request("/transactions", {

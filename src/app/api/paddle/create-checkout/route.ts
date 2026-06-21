@@ -17,7 +17,8 @@ export async function POST(request: Request) {
 
     const transaction = await paddle.createTransaction(
       [{ priceId, quantity: 1 }],
-      user.email
+      user.email,
+      { user_id: user.id }
     )
 
     const checkoutUrl = transaction.data?.urls?.checkout

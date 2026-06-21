@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   try {
     const rawBody = await request.text()
 
-    // Verify webhook signature
     const signature = request.headers.get("paddle-signature")
     if (WEBHOOK_SECRET) {
       const expected = await verifyPaddleSignature(rawBody, signature || "", WEBHOOK_SECRET)
@@ -22,12 +21,8 @@ export async function POST(request: Request) {
     const supabase = await createClient()
 
     async function handleTransaction(tx: any) {
-      const email = tx.customer?.email
-      if (!email) return
-
-      const { data: users } = await supabase.auth.admin.listUsers()
-      const user = users?.users?.find((u: any) => u.email === email)
-      if (!user) return
+      const userId = tx.custom_data?.user_id
+      if (!userId) return
 
       const items = tx.items || []
       const priceId = items[0]?.price?.id || ""
@@ -37,7 +32,7 @@ export async function POST(request: Request) {
       await supabase
         .from("subscriptions")
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           paddle_subscription_id: tx.subscription_id?.toString(),
           product: "combined",
           status: "active",
@@ -55,7 +50,7 @@ export async function POST(request: Request) {
 
       if (!existing) {
         await supabase.from("billing_history").insert({
-          user_id: user.id,
+          user_id: userId,
           paddle_transaction_id: tx.id,
           product: "combined",
           plan,
