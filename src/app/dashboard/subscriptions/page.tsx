@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, X, Loader, ExternalLink } from "lucide-react"
+import { Check, Loader, ExternalLink } from "lucide-react"
+
+const PRICE_IDS: Record<string, string> = {
+  monthly: "pri_01kvkva7hbtmngwv59d2hsr1yn",
+  yearly: "pri_01kvkva7qmnz1d3fhd4gtznxsr",
+}
 
 const plans = [
   {
@@ -30,6 +35,7 @@ export default function SubscriptionsPage() {
   const [subs, setSubs] = useState<any[]>([])
   const [billing, setBilling] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -57,6 +63,28 @@ export default function SubscriptionsPage() {
     })
   }, [router])
 
+  async function handleCheckout(planId: string) {
+    const priceId = PRICE_IDS[planId]
+    if (!priceId) return
+
+    setCheckoutLoading(planId)
+    try {
+      const res = await fetch("/api/paddle/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId, plan: planId }),
+      })
+      const data = await res.json()
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
+      }
+    } catch (err) {
+      console.error("Checkout failed", err)
+    } finally {
+      setCheckoutLoading(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -74,7 +102,6 @@ export default function SubscriptionsPage() {
         <p className="text-muted-foreground">Manage your plan and billing</p>
       </div>
 
-      {/* Current plan */}
       {activeSub ? (
         <Card>
           <CardHeader>
@@ -93,13 +120,6 @@ export default function SubscriptionsPage() {
               </span>
             </div>
           </CardHeader>
-          <CardContent>
-            <Button variant="outline" asChild>
-              <a href="#" className="gap-2">
-                Manage on Paddle <ExternalLink className="h-3 w-3" />
-              </a>
-            </Button>
-          </CardContent>
         </Card>
       ) : (
         <Card>
@@ -110,7 +130,6 @@ export default function SubscriptionsPage() {
         </Card>
       )}
 
-      {/* Pricing */}
       <div className="grid gap-6 md:grid-cols-2">
         {plans.map((plan) => (
           <Card key={plan.id} className={plan.badge ? "border-accent/50" : ""}>
@@ -133,15 +152,24 @@ export default function SubscriptionsPage() {
                   <span>{f}</span>
                 </div>
               ))}
-              <Button className="w-full mt-4" disabled={!activeSub}>
-                {activeSub ? "Current Plan" : "Coming soon"}
+              <Button
+                className="w-full mt-4"
+                onClick={() => handleCheckout(plan.id)}
+                disabled={checkoutLoading === plan.id || !!activeSub}
+              >
+                {checkoutLoading === plan.id ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : activeSub ? (
+                  "Current Plan"
+                ) : (
+                  "Subscribe"
+                )}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Billing history */}
       <div>
         <h2 className="text-lg font-semibold mb-4">Billing History</h2>
         {billing.length === 0 ? (
