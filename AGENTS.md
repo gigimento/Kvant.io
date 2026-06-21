@@ -174,6 +174,25 @@ When switching providers, libraries, or making any cross-cutting change:
 - Add `key` property (required) — missing it causes "bad_request"
 - PowerShell: use `Invoke-RestMethod` with `ConvertTo-Json`
 
+### Subscription Gating
+- `lib/subscription-guard.ts` — server-side check: active subscription OR `trial_ends_at > now`
+- `components/dashboard/subscription-gate.tsx` — client wrapper, shows "View Plans" card when blocked
+- Protected API routes return `402` with `"error": "Subscription required..."`
+- Trial period: 14 days from profile creation (`profiles.trial_ends_at DEFAULT now() + interval '14 days'`)
+
+### Paddle Webhook Events
+- `transaction.completed` + `transaction.paid` → `handleTransaction()` upserts subscription on `paddle_subscription_id`
+- `subscription.updated` → syncs status and billing period
+- `subscription.canceled` → sets status to "cancelled"
+- `upsert` must specify `onConflict: "paddle_subscription_id"` or it creates duplicate rows on renewal
+- `billing_history` dedup: check `maybeSingle()` before insert to avoid duplicates from retries
+
+### Paddle API
+- API key: `pdl_live_apikey_...` for server-side calls (`Authorization: Bearer` header)
+- Webhook secret: `pdl_ntfset_...` for signature verification (HMAC-SHA256)
+- Product creation: `POST /products` → `POST /prices` → `POST /transactions` returns `checkout.url`
+- Trial period: set `trial_period: { interval: "day", frequency: 14, requires_payment_method: true }` on price
+
 ### Windows/PowerShell
 - `curl` in PS is alias for `Invoke-WebRequest` — use `curl.exe` for real curl
 - `Invoke-RestMethod` with `-Body (ConvertTo-Json $obj)` for JSON APIs

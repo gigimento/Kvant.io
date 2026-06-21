@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Palette } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
@@ -24,6 +24,16 @@ const navItems = [
     icon: Search,
   },
   {
+    href: "/dashboard/competitive",
+    label: "Competitive Dashboard",
+    icon: BarChart3,
+  },
+  {
+    href: "/dashboard/content-briefs",
+    label: "Content Briefs",
+    icon: FileEdit,
+  },
+  {
     href: "/dashboard/connections",
     label: "Connections",
     icon: Link2,
@@ -32,6 +42,11 @@ const navItems = [
     href: "/dashboard/subscriptions",
     label: "Subscriptions",
     icon: CreditCard,
+  },
+  {
+    href: "/dashboard/settings/branding",
+    label: "Branding",
+    icon: Palette,
   },
 ]
 

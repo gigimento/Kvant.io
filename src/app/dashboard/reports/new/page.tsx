@@ -15,13 +15,23 @@ export default function NewReportPage() {
   const [name, setName] = useState("")
   const [clientName, setClientName] = useState("")
   const [schedule, setSchedule] = useState<"monthly" | "weekly">("monthly")
+  const [recipientsInput, setRecipientsInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function parseRecipients(input: string): string[] {
+    return input
+      .split(",")
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    const recipients = parseRecipients(recipientsInput)
 
     const supabase = createClient()
     const { data: user } = await supabase.auth.getUser()
@@ -33,6 +43,7 @@ export default function NewReportPage() {
       client_name: clientName,
       data_sources: ["ga4"],
       schedule,
+      recipients: recipients.length > 0 ? recipients : [],
       is_active: true,
     })
 
@@ -70,6 +81,11 @@ export default function NewReportPage() {
             <div className="space-y-2">
               <Label htmlFor="client">Client Name</Label>
               <Input id="client" placeholder="e.g. ABC Corp" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recipients">Email Recipients</Label>
+              <Input id="recipients" placeholder="client@example.com, manager@example.com" value={recipientsInput} onChange={(e) => setRecipientsInput(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Comma-separated emails. Reports will auto-send after generation.</p>
             </div>
             <div className="space-y-2">
               <Label>Schedule</Label>

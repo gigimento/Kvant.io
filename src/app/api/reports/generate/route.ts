@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { askLLMWithSystem } from "@/lib/llm/client"
 import { buildNarrativePrompt } from "@/lib/llm/prompts/narrative"
 import { checkServerAccess } from "@/lib/subscription-guard"
+import { sendReportEmail } from "@/lib/email/send-report"
 
 export async function POST(request: Request) {
   try {
@@ -101,6 +102,19 @@ export async function POST(request: Request) {
           status: "ready",
         })
         .eq("id", report.id)
+
+      if (config.recipients && config.recipients.length > 0) {
+        const reportData = {
+          id: report.id,
+          client_name: config.client_name,
+          period_start: report.period_start,
+          period_end: report.period_end,
+          narrative_text: llmResponse.content,
+          raw_data: mockData,
+          created_at: report.created_at,
+        }
+        sendReportEmail(config.recipients, reportData)
+      }
 
       return NextResponse.json({
         success: true,

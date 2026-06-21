@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, FileText, Loader2, Sparkles, Trash2 } from "lucide-react"
+import { ArrowLeft, FileText, Loader2, Sparkles, Trash2, Share2, Copy, X, CheckCircle, Download } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 import { SubscriptionGate } from "@/components/dashboard/subscription-gate"
@@ -18,6 +18,13 @@ export default function ReportDetailPage() {
   const [reports, setReports] = useState<any[]>([])
   const [generating, setGenerating] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState<string | null>(null)
+  const [shareModal, setShareModal] = useState<{
+    reportId: string
+    shareUrl: string | null
+    loading: boolean
+    copied: boolean
+  } | null>(null)
 
   async function loadData() {
     const supabase = createClient()
@@ -52,6 +59,31 @@ export default function ReportDetailPage() {
       alert(`Network error: ${e.message}`)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function handleDownload(reportId: string) {
+    setDownloading(reportId)
+    try {
+      const res = await fetch(`/api/reports/export-pdf/${reportId}`)
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`Download failed: ${err.error || res.statusText}`)
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `report-${reportId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      alert(`Download error: ${e.message}`)
+    } finally {
+      setDownloading(null)
     }
   }
 
@@ -101,7 +133,26 @@ export default function ReportDetailPage() {
                   </div>
                 </CardContent>
               )}
-              <div className="px-6 pb-4 flex justify-end">
+              <div className="px-6 pb-4 flex justify-end gap-2">
+                {report.status === "ready" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-secondary hover:text-secondary hover:bg-secondary/10"
+                    onClick={() => setShareModal({ reportId: report.id, shareUrl: null, loading: false, copied: false })}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={downloading === report.id}
+                  onClick={() => handleDownload(report.id)}
+                >
+                  {downloading === report.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {downloading === report.id ? "Downloading..." : "Download PDF"}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -125,6 +176,93 @@ export default function ReportDetailPage() {
         </div>
       )}
     </div>
+
+      {shareModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShareModal(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-white/10 bg-primary p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Share Report</h3>
+              <button onClick={() => setShareModal(null)} className="text-muted-foreground hover:text-white transition-colors">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {!shareModal.shareUrl ? (
+              <Button
+                className="w-full"
+                disabled={shareModal.loading}
+                onClick={async () => {
+                  setShareModal((prev) => prev ? { ...prev, loading: true } : null)
+                  try {
+                    const res = await fetch("/api/reports/share", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ reportId: shareModal.reportId }),
+                    })
+                    const data = await res.json()
+                    if (data.shareUrl) {
+                      setShareModal((prev) => prev ? { ...prev, shareUrl: data.shareUrl, loading: false } : null)
+                    } else {
+                      alert(data.error || "Failed to generate link")
+                      setShareModal((prev) => prev ? { ...prev, loading: false } : null)
+                    }
+                  } catch {
+                    alert("Network error")
+                    setShareModal((prev) => prev ? { ...prev, loading: false } : null)
+                  }
+                }}
+              >
+                {shareModal.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Generate Share Link
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-primary/50 p-3">
+                  <input
+                    readOnly
+                    value={shareModal.shareUrl}
+                    className="flex-1 bg-transparent text-sm text-white outline-none"
+                  />
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(shareModal.shareUrl!)
+                      setShareModal((prev) => prev ? { ...prev, copied: true } : null)
+                      setTimeout(() => setShareModal((prev) => prev ? { ...prev, copied: false } : null), 2000)
+                    }}
+                    className="shrink-0 text-secondary hover:text-white transition-colors"
+                  >
+                    {shareModal.copied ? <CheckCircle className="h-5 w-5 text-green-400" /> : <Copy className="h-5 w-5" />}
+                  </button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  onClick={async () => {
+                    const token = shareModal.shareUrl!.split("/").pop()
+                    if (!token) return
+                    try {
+                      await fetch(`/api/reports/share/${token}`, { method: "DELETE" })
+                      setShareModal(null)
+                    } catch {
+                      alert("Failed to delete share link")
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Share Link
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </SubscriptionGate>
   )
 }
