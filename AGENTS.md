@@ -27,23 +27,39 @@ src/
 ├── app/
 │   ├── page.tsx                    # Landing page
 │   ├── layout.tsx                  # Root layout
+│   ├── proxy.ts                    # Request interception (was middleware.ts)
 │   ├── login/page.tsx
 │   ├── register/page.tsx           # Redirects to /onboarding
 │   ├── onboarding/page.tsx         # Profile + feature selection
 │   ├── terms/page.tsx
 │   ├── privacy/page.tsx
 │   ├── refund/page.tsx
+│   ├── share/[token]/page.tsx      # Client-facing shared reports
 │   ├── dashboard/
 │   │   ├── layout.tsx              # Sidebar + OnboardingGuard
 │   │   ├── page.tsx                # Stats cards
-│   │   ├── reports/                # Narrative Reports
-│   │   ├── seo/                    # Brand Radar
+│   │   ├── reports/                # Narrative Reports (list + detail + create)
+│   │   ├── seo/                    # Brand Radar (list + detail + new)
+│   │   ├── competitive/            # Competitive Dashboard (charts + sentiment)
+│   │   ├── content-briefs/         # AI content brief generation
+│   │   ├── content-calendar/       # Drag-and-drop calendar
+│   │   ├── invoices/               # Invoice CRUD + PDF download
+│   │   ├── proposals/              # AI-powered proposal generation
 │   │   ├── connections/            # GA4 / Google Ads / Meta Ads
-│   │   └── subscriptions/          # Paddle checkout + billing history
+│   │   ├── subscriptions/          # Paddle checkout + billing history
+│   │   └── settings/branding/      # Brand color/logo customization
 │   └── api/
 │       ├── auth/callback/route.ts  # Check onboarding → redirect
+│       ├── branding/route.ts
 │       ├── reports/generate/route.ts
+│       ├── reports/share/route.ts
+│       ├── reports/export-pdf/[reportId]/route.ts
 │       ├── seo/scan/route.ts
+│       ├── dashboard/competitive/route.ts
+│       ├── content-briefs/generate/route.ts
+│       ├── content-calendar/[id]/route.ts
+│       ├── invoices/[id]/pdf/route.ts + [id]/route.ts
+│       ├── proposals/generate/route.ts
 │       ├── cron/
 │       │   ├── generate-reports/   # Vercel cron Mon 6h
 │       │   └── scan-brands/        # Vercel cron daily 7h
@@ -55,33 +71,44 @@ src/
 │           ├── create-checkout/    # Creates Paddle transaction
 │           └── webhook/            # Handles subscription events
 ├── components/
-│   ├── ui/                         # button, card, badge, input, skeleton
+│   ├── ui/                         # button, card, badge, input, skeleton, etc.
 │   ├── dashboard/
 │   │   ├── sidebar.tsx             # Nav + logout
 │   │   └── onboarding-guard.tsx    # Redirects if onboarding incomplete
+│   └── calendar/
+│       └── content-calendar.tsx    # Drag-drop calendar grid
 ├── lib/
-│   ├── supabase/                   # client.ts, server.ts, middleware.ts
+│   ├── supabase/                   # client.ts, server.ts, middleware.ts, admin.ts
 │   ├── llm/client.ts               # Google Gemini unified client
-│   ├── llm/prompts/                # narrative.ts, seo-scan.ts
+│   ├── llm/prompts/                # narrative.ts, seo-scan.ts, proposal.ts, content-brief.ts
 │   ├── api/                        # ga4.ts, google-ads.ts, meta-ads.ts
-│   └── paddle/client.ts            # Paddle API wrapper
+│   ├── paddle/client.ts            # Paddle API wrapper
+│   └── email/                      # send-report.ts + templates/
 supabase/migrations/
 ├── 001_schema.sql                  # Base: profiles, reports, brand_monitors, etc.
 ├── 002_soft_delete.sql             # Soft delete columns + RLS fixes
-└── 003_onboarding_paddle.sql       # onboarding_completed, paddle_subscription_id, billing_history
+├── 003_onboarding_paddle.sql       # onboarding_completed, paddle_subscription_id, billing_history
+├── 004_trial.sql                   # Trial period (14 days)
+├── 005_features.sql                # client_share_links, recipients, brand_settings
+├── 006_public_share_rls.sql        # RLS for public share links
+├── 007_content_calendar.sql        # content_calendar table
+└── 008_invoices.sql                # invoices table
 ```
 
 ## Key Constraints
 - **Color palette**: `#27262E` bg, `#E19C63` accent, `#8BA5BE` secondary
 - **No Stripe** — Paddle for payments (works from Serbia)
 - **Google Gemini** free tier for all LLM calls
-- Middleware renamed to "proxy" in Next.js 16 — `middleware.ts` deprecated but still works
+- **proxy.ts** — migrated from `middleware.ts` (Next.js 16 convention)
 
 ## Database (Supabase `pvjyeycxwqoyzhaancaj`)
-- `profiles` — user profile, onboarding_completed flag
+- `profiles` — user profile, onboarding_completed flag, trial_ends_at
 - `data_connections` — OAuth tokens for GA4, Google Ads, Meta Ads
 - `report_configs` + `reports` — Narrative Reports (soft delete)
+- `client_share_links` — public share tokens for reports
 - `brand_monitors` + `brand_mentions` — Brand Radar
+- `content_calendar` — calendar entries (title, date, status, brief_id, notes)
+- `invoices` — invoice number, client, items, subtotal/tax/total, status, due_date
 - `subscriptions` + `billing_history` — Paddle subscriptions
 - RLS: ALL tables need SELECT + INSERT + UPDATE + DELETE policies
 
@@ -89,28 +116,39 @@ supabase/migrations/
 
 | Variable | Where | Source |
 |----------|-------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` + Vercel (production) | Supabase Settings → API |
+| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` + Vercel | Supabase Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` + Vercel | Supabase Settings → API |
-| `GOOGLE_AI_API_KEY` | `.env.local` + Vercel (production) | Google AI Studio |
-| `PADDLE_API_KEY` | `.env.local` + Vercel (production) | Paddle Developer Tools → Authentication |
+| `SUPABASE_SERVICE_KEY` | `.env.local` + Vercel | Supabase Settings → API (`service_role`) |
+| `SUPABASE_MGMT_TOKEN` | `.env.local` + Vercel | Supabase Settings → Access Tokens |
+| `GOOGLE_AI_API_KEY` | `.env.local` + Vercel | Google AI Studio |
+| `PADDLE_API_KEY` | `.env.local` + Vercel | Paddle Developer Tools → Authentication |
+| `PADDLE_WEBHOOK_SECRET` | `.env.local` + Vercel | Paddle Developer Tools → Webhooks |
 | `NEXT_PUBLIC_APP_URL` | `.env.local` + Vercel | `https://kvantio.vercel.app` |
-| `GOOGLE_CLIENT_ID` | Not set yet | Google Cloud Console (for GA4 OAuth) |
-| `GOOGLE_CLIENT_SECRET` | Not set yet | Google Cloud Console |
-| `GOOGLE_ADS_DEVELOPER_TOKEN` | Not set yet | Google Ads API |
-| `META_APP_ID` | Not set yet | Meta Developers |
-| `META_APP_SECRET` | Not set yet | Meta Developers |
-| `PADDLE_WEBHOOK_SECRET` | Not set yet | Paddle Developer Tools → Webhooks |
-| `RESEND_API_KEY` | Not set yet | Resend |
+| `GOOGLE_CLIENT_ID` | `.env.local` + Vercel | Google Cloud Console (for GA4 OAuth) |
+| `GOOGLE_CLIENT_SECRET` | `.env.local` + Vercel | Google Cloud Console |
+| `GOOGLE_ADS_DEVELOPER_TOKEN` | `.env.local` + Vercel | Google Ads API |
+| `META_APP_ID` | `.env.local` + Vercel | Meta Developers |
+| `META_APP_SECRET` | `.env.local` + Vercel | Meta Developers |
+| `RESEND_API_KEY` | `.env.local` + Vercel | Resend |
+| `NEON_API_KEY` | `.env.local` + DB | Neon Console |
+| `SENTRY_AUTH_TOKEN` | `.env.local` + DB | Sentry Account → Auth Tokens |
 
 ## Session Status (June 21, 2026)
-- ✅ Build passes (30 routes, 0 errors)
+- ✅ Build passes (46 routes, 0 errors)
 - ✅ Auth + onboarding flow
 - ✅ Narrative Reports + Brand Radar working
+- ✅ Competitive Dashboard (charts + sentiment breakdown)
+- ✅ Content Briefs (AI generation + schedule to calendar)
+- ✅ Content Calendar (drag-and-drop)
+- ✅ Invoices (CRUD + PDF download)
+- ✅ Proposals (AI-powered generation)
+- ✅ Branding settings (colors + logo)
 - ✅ Paddle integration: products created, checkout API, webhook handler
 - ✅ Vercel cron: Mon 6h reports, daily 7h brand scans
 - ✅ GA4 / Google Ads / Meta Ads OAuth infrastructure
 - ✅ Soft delete on reports
 - ✅ Legal pages (Terms, Privacy, Refund)
+- ✅ `proxy.ts` migration (was `middleware.ts`)
 - ❌ Paddle webhook secret not yet configured (needs setup in Paddle dashboard)
 - ❌ GA4/Ads integrations need Google Cloud + Meta App setup
 - ❌ Resend API key not configured

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, Copy, Check, Sparkles } from "lucide-react"
+import { Loader2, Copy, Check, Sparkles, CalendarPlus } from "lucide-react"
+import { format } from "date-fns"
 
 interface ContentBrief {
   title: string
@@ -26,6 +27,9 @@ export default function ContentBriefsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
+  const [scheduleDate, setScheduleDate] = useState("")
+  const [scheduling, setScheduling] = useState(false)
+  const [scheduled, setScheduled] = useState(false)
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault()
@@ -108,6 +112,40 @@ export default function ContentBriefsPage() {
 
       {brief && (
         <div className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle>Schedule to Calendar</CardTitle>
+                <CardDescription>Add this brief to your content calendar</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {scheduled ? (
+                <p className="text-sm text-green-400">Added to calendar for {format(new Date(scheduleDate), "MMMM d, yyyy")}</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} className="w-fit" />
+                  <Button size="sm" onClick={async () => {
+                    if (!scheduleDate) return
+                    setScheduling(true)
+                    try {
+                      const keywordForTitle = keyword || brief.title
+                      await fetch("/api/content-calendar", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: `Brief: ${brief.title}`, scheduled_date: scheduleDate }),
+                      })
+                      setScheduled(true)
+                    } catch {}
+                    setScheduling(false)
+                  }} disabled={!scheduleDate || scheduling}>
+                    {scheduling ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />}
+                    {scheduling ? "Adding..." : "Add to Calendar"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
