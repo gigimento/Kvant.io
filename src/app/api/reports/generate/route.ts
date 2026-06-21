@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "configId required" }, { status: 400 })
     }
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("reports")
     if (!access.allowed) {
       return NextResponse.json({ error: "Subscription required. Subscribe to generate reports." }, { status: 402 })
     }

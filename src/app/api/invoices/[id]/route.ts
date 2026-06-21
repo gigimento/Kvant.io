@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("invoices")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     const allowed = ["client_name", "client_email", "items", "tax_rate", "status", "due_date", "notes"]

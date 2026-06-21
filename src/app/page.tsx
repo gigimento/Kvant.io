@@ -10,50 +10,35 @@ import {
   TrendingUp,
   Users,
   BarChart3,
-  Bell,
   ArrowRight,
   Sparkles,
   Shield,
   Zap,
-  CheckCircle2,
   Eye,
   MessageSquare,
-  LineChart,
+  FileEdit,
+  Calendar,
+  Receipt,
+  Presentation,
+  Palette,
 } from "lucide-react"
 
-const products = [
-  {
-    id: "reports",
-    name: "Narrative Reports",
-    tagline: "AI-powered client reports in plain English",
-    description:
-      "Connect GA4, Google Ads, or Meta Ads. Get beautifully written monthly reports your clients will actually read.",
-    icon: FileText,
-    href: "/register?product=reports",
-    features: [
-      "One-click data import from GA4, Google Ads, Meta",
-      "Professional narrative generation (Claude AI)",
-      "PDF reports delivered to your inbox",
-      "White-label ready",
-    ],
-    price: "$49",
-  },
-  {
-    id: "seo",
-    name: "Brand Radar",
-    tagline: "See what AI says about your brand",
-    description:
-      "Monitor how ChatGPT, Claude, and other LLMs mention your brand and competitors.",
-    icon: Search,
-    href: "/register?product=seo",
-    features: [
-      "100+ LLM queries per monitor",
-      "Sentiment analysis per mention",
-      "Share of voice vs competitors",
-      "Weekly email digests",
-    ],
-    price: "$99",
-  },
+const ALL_FEATURES_MARKETING = [
+  { name: "Narrative Reports", description: "AI-generated client reports from your analytics data", icon: FileText, price: "$9" },
+  { name: "Brand Radar", description: "Monitor brand mentions across every major LLM", icon: Search, price: "$9" },
+  { name: "Competitive Dashboard", description: "Track competitors and market positioning over time", icon: BarChart3, price: "$9" },
+  { name: "Content Briefs", description: "Generate SEO-optimized content briefs in seconds", icon: FileEdit, price: "$9" },
+  { name: "Content Calendar", description: "Plan and schedule your content publishing", icon: Calendar, price: "$9" },
+  { name: "Invoices", description: "Create and manage professional client invoices", icon: Receipt, price: "$9" },
+  { name: "Proposals", description: "AI-powered proposal generation that wins bids", icon: Presentation, price: "$9" },
+  { name: "Branding", description: "Custom brand colors and settings across all tools", icon: Palette, price: "$3" },
+]
+
+const tiers = [
+  { name: "Starter", count: "1 tool", price: "$9", yearly: "$90" },
+  { name: "Growth", count: "2–3 tools", price: "$15", yearly: "$150" },
+  { name: "Scale", count: "4–5 tools", price: "$22", yearly: "$220" },
+  { name: "All Access", count: "6–8 tools", price: "$29", yearly: "$290", badge: "Best Value" },
 ]
 
 const benefits = [
@@ -105,18 +90,17 @@ export default function MarketingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,165,190,0.06),transparent_50%)]" />
         <div className="mx-auto max-w-7xl px-6 text-center relative">
           <Badge variant="secondary" className="mb-6">
-            Two tools, one platform
+            8 tools, one platform — pay for what you use
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Reports your clients{" "}
-            <span className="text-accent">actually read</span>
+            Your agency toolkit,{" "}
+            <span className="text-accent">your way</span>
             <br />
-            AI visibility you can{" "}
-            <span className="text-accent">actually trust</span>
+            Pick only what you need
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Narrative reports that replace dashboards. Brand monitoring across
-            every major LLM. Built for agencies that want to communicate better.
+            AI-powered reports, brand monitoring, competitive analysis, content
+            briefs, calendar, invoices, proposals, and branding. Use one or all.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Button size="lg" asChild>
@@ -125,64 +109,75 @@ export default function MarketingPage() {
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="#products">See Products</Link>
+              <Link href="#tools">See Tools</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Products */}
-      <section id="products" className="relative py-24">
+      {/* All Tools */}
+      <section id="tools" className="relative py-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,156,99,0.03),transparent_70%)]" />
         <div className="mx-auto max-w-7xl px-6 relative">
           <div className="text-center">
-            <h2 className="text-3xl font-bold">Two products, one platform</h2>
+            <h2 className="text-3xl font-bold">All your agency tools in one place</h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Each solves a specific agency need. Use one or both.
+              Pick exactly what you need. Build your own plan.
             </p>
           </div>
-          <div className="mt-16 grid gap-8 md:grid-cols-2">
-            {products.map((product) => {
-              const Icon = product.icon
+          <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {ALL_FEATURES_MARKETING.map((f) => {
+              const Icon = f.icon
               return (
-                <Card key={product.id} className="relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 h-64 w-64 translate-x-16 -translate-y-16 rounded-full bg-accent/5 blur-3xl group-hover:bg-accent/10 transition-all" />
-                  <CardContent className="p-8 space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10">
-                        <Icon className="h-6 w-6 text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground">{product.tagline}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {product.description}
-                    </p>
-                    <ul className="space-y-3">
-                      {product.features.map((f) => (
-                        <li key={f} className="flex items-start gap-3 text-sm">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                      <div>
-                        <span className="text-2xl font-bold">{product.price}</span>
-                        <span className="text-sm text-muted-foreground">/mo</span>
-                      </div>
-                      <Button size="sm" asChild>
-                        <Link href={product.href}>
-                          Learn More <ArrowRight className="ml-1 h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={f.name} className="group relative rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-all">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
+                    <Icon className="h-5 w-5 text-accent" />
+                  </div>
+                  <h3 className="font-semibold">{f.name}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+                  <p className="mt-4 text-sm"><span className="text-lg font-bold">{f.price}</span><span className="text-muted-foreground">/mo</span></p>
+                </div>
               )
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Tiers */}
+      <section id="pricing" className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-6 relative">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold">Simple per-tool pricing</h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Every tool is $9/mo individually. The more you pick, the less you pay.
+            </p>
+          </div>
+          <div className="mt-16 grid gap-6 md:grid-cols-4">
+            {tiers.map((tier) => (
+              <Card key={tier.name} className={tier.badge ? "border-accent/50 relative" : ""}>
+                {tier.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-white">
+                    {tier.badge}
+                  </span>
+                )}
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{tier.name}</h3>
+                    <p className="text-sm text-muted-foreground">{tier.count}</p>
+                  </div>
+                  <div>
+                    <span className="text-3xl font-bold">{tier.price}</span>
+                    <span className="text-sm text-muted-foreground">/mo</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">or {tier.yearly}/yr (2 months free)</p>
+                  <Button size="sm" className="w-full" asChild>
+                    <Link href={tier.count === "6–8 tools" ? "/register" : "/register"}>
+                      Get Started <ArrowRight className="ml-1 h-3 w-3" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

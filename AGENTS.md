@@ -7,9 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Kvant — Project Memory
 
 ## Overview
-Two SaaS products in one Next.js project at `https://kvantio.vercel.app`:
-- **Narrative Reports** — AI-generated client reports with narrative storytelling
-- **Brand Radar** — LLM brand visibility monitoring and share-of-voice tracking
+8 SaaS tools in one Next.js project at `https://kvantio.vercel.app`:
+- **Narrative Reports**, **Brand Radar**, **Competitive Dashboard**, **Content Briefs**, **Content Calendar**, **Invoices**, **Proposals**, **Branding**
+- Build-your-own-plan pricing: pick any subset of tools, pay per tier (1=$9, 2-3=$15, 4-5=$22, 6-8=$29/mo)
 - GitHub: `github.com/gigimento/Kvant.io`
 
 ## Tech Stack
@@ -17,7 +17,7 @@ Two SaaS products in one Next.js project at `https://kvantio.vercel.app`:
 - **Tailwind CSS v4**
 - **Supabase** (Auth + PostgreSQL) — project: `pvjyeycxwqoyzhaancaj`
 - **Google Gemini** (`gemini-3.1-flash-lite`) — free 60 req/min for all LLM calls
-- **Paddle** — payments (14-day trial, $29/mo or $290/yr)
+- **Paddle** — payments (14-day trial, tiered pricing: 4 tiers × 2 billing cycles = 8 prices)
 - **Vercel** — hosting at `kvantio.vercel.app` (team: `giga-s-projects4`, project: `kvant`)
 - Resend — planned for email delivery
 
@@ -74,10 +74,15 @@ src/
 │   ├── ui/                         # button, card, badge, input, skeleton, etc.
 │   ├── dashboard/
 │   │   ├── sidebar.tsx             # Nav + logout
+│   │   ├── subscription-gate.tsx   # Client-side gating (optional feature prop)
 │   │   └── onboarding-guard.tsx    # Redirects if onboarding incomplete
+
+
 │   └── calendar/
 │       └── content-calendar.tsx    # Drag-drop calendar grid
 ├── lib/
+│   ├── features.ts                 # 8 tool definitions, tier pricing, price selection
+│   ├── subscription-guard.ts       # Server-side guard (active sub OR trial) + per-feature check
 │   ├── supabase/                   # client.ts, server.ts, middleware.ts, admin.ts
 │   ├── llm/client.ts               # Google Gemini unified client
 │   ├── llm/prompts/                # narrative.ts, seo-scan.ts, proposal.ts, content-brief.ts
@@ -92,7 +97,8 @@ supabase/migrations/
 ├── 005_features.sql                # client_share_links, recipients, brand_settings
 ├── 006_public_share_rls.sql        # RLS for public share links
 ├── 007_content_calendar.sql        # content_calendar table
-└── 008_invoices.sql                # invoices table
+├── 008_invoices.sql                # invoices table
+└── 010_user_features.sql           # user_features TEXT[] for per-feature gating
 ```
 
 ## Key Constraints
@@ -102,7 +108,7 @@ supabase/migrations/
 - **proxy.ts** — migrated from `middleware.ts` (Next.js 16 convention)
 
 ## Database (Supabase `pvjyeycxwqoyzhaancaj`)
-- `profiles` — user profile, onboarding_completed flag, trial_ends_at
+- `profiles` — user profile, onboarding_completed, trial_ends_at, user_features TEXT[]
 - `data_connections` — OAuth tokens for GA4, Google Ads, Meta Ads
 - `report_configs` + `reports` — Narrative Reports (soft delete)
 - `client_share_links` — public share tokens for reports
@@ -134,15 +140,14 @@ supabase/migrations/
 | `SENTRY_AUTH_TOKEN` | `.env.local` + DB | Sentry Account → Auth Tokens |
 
 ## Session Status (June 21, 2026)
-- ✅ Build passes (46 routes, 0 errors)
+- ✅ Build passes (49 routes, 0 errors)
 - ✅ Auth + onboarding flow
-- ✅ Narrative Reports + Brand Radar working
-- ✅ Competitive Dashboard (charts + sentiment breakdown)
-- ✅ Content Briefs (AI generation + schedule to calendar)
-- ✅ Content Calendar (drag-and-drop)
-- ✅ Invoices (CRUD + PDF download)
-- ✅ Proposals (AI-powered generation)
-- ✅ Branding settings (colors + logo)
+- ✅ 8 tools live: Reports, Brand Radar, Competitive, Content Briefs, Calendar, Invoices, Proposals, Branding
+- ✅ Per-feature subscription gating (server + client side)
+- ✅ "Build Your Own Plan" pricing: tiered (1=$9, 2-3=$15, 4-5=$22, 6-8=$29), monthly/yearly toggle
+- ✅ Plan builder UI on `/dashboard/subscriptions` with live calculator
+- ✅ 6 new Paddle tier prices created (tiers 1-3, monthly+yearly)
+- ✅ Landing page updated with tool grid + pricing tiers table
 - ✅ Paddle integration: products created, checkout API, webhook handler
 - ✅ Vercel cron: Mon 6h reports, daily 7h brand scans
 - ✅ GA4 / Google Ads / Meta Ads OAuth infrastructure
@@ -213,9 +218,10 @@ When switching providers, libraries, or making any cross-cutting change:
 - PowerShell: use `Invoke-RestMethod` with `ConvertTo-Json`
 
 ### Subscription Gating
-- `lib/subscription-guard.ts` — server-side check: active subscription OR `trial_ends_at > now`
-- `components/dashboard/subscription-gate.tsx` — client wrapper, shows "View Plans" card when blocked
+- `lib/subscription-guard.ts` — server-side check: `checkServerAccess(feature?)` — checks active sub OR trial, plus optional per-feature access via `profiles.user_features`
+- `components/dashboard/subscription-gate.tsx` — client wrapper with optional `feature` prop; shows "View Plans" or "Upgrade Plan" card when blocked
 - Protected API routes return `402` with `"error": "Subscription required..."`
+- Feature-blocked routes return `{allowed: false, reason: "feature_not_available"}`
 - Trial period: 14 days from profile creation (`profiles.trial_ends_at DEFAULT now() + interval '14 days'`)
 
 ### Paddle Webhook Events
@@ -230,6 +236,49 @@ When switching providers, libraries, or making any cross-cutting change:
 - Webhook secret: `pdl_ntfset_...` for signature verification (HMAC-SHA256)
 - Product creation: `POST /products` → `POST /prices` → `POST /transactions` returns `checkout.url`
 - Trial period: set `trial_period: { interval: "day", frequency: 14, requires_payment_method: true }` on price
+- Paddle prices for Kvant: `pro_01kvkv9ssf3aqddcj49d7mbh3r`
+  - Tier 1 Monthly: `pri_01kvn3dpsztmk4k53qenq9der3` ($9)
+  - Tier 1 Yearly: `pri_01kvn3dq038s3hdfckkv1b8dhj` ($90)
+  - Tier 2 Monthly: `pri_01kvn3dq5wrn1jv6r1q69xqz6a` ($15)
+  - Tier 2 Yearly: `pri_01kvn3dqbsvd8xyv941y2yhr2f` ($150)
+  - Tier 3 Monthly: `pri_01kvn3dqhgp6xttjr76nkjk7p9` ($22)
+  - Tier 3 Yearly: `pri_01kvn3dqq66t0akr7gvs14bawj` ($220)
+  - Tier 4 Monthly: `pri_01kvkva7hbtmngwv59d2hsr1yn` ($29, existing)
+  - Tier 4 Yearly: `pri_01kvkva7qmnz1d3fhd4gtznxsr` ($290, existing)
+
+### "Build Your Own Plan" — Pricing Architecture
+- All 8 tools defined in `lib/features.ts` with slug, name, icon
+- Pricing tiers (by tool count): 1=$9, 2-3=$15, 4-5=$22, 6-8=$29
+- Yearly = monthly × 10 (2 months free)
+- Tier 4 reuses existing Paddle prices; tiers 1-3 created via Paddle API (`POST /prices`)
+- `getPriceForSelection(count, plan)` returns correct `{priceId, price}` from config
+
+### Per-Feature Subscription Gating
+- `profiles.user_features TEXT[]` — stores which tools the user paid for
+- Migration 010 adds column; existing users backfilled with all 8 features
+- `checkServerAccess(feature?)` — optional feature param; if provided, checks `user_features` includes slug
+- If `user_features` is null/empty, defaults to allowing (backward compat during rollout)
+- Trial users bypass feature check (full access during trial)
+- All 11 API routes pass feature slug: `reports`, `seo`, `competitive`, `content-briefs`, `content-calendar`, `invoices`, `proposals`
+- `SubscriptionGate({children, feature?})` — client-side gate (optional feature param)
+- Feature-blocked state shows "upgrade" card with link to `/dashboard/subscriptions`
+
+### Paddle Checkout Flow (Plan Builder)
+- `POST /api/paddle/create-checkout` now accepts `{features: string[], plan}` instead of `{priceId, plan}`
+- Route computes the correct tier price ID from feature count
+- Selected features passed as `custom_data.features` (comma-separated string)
+- Features SAVED immediately on profiles before redirecting to Paddle checkout
+- Webhook also saves features from `custom_data.features` on `transaction.completed`
+- Subscription page (`/dashboard/subscriptions`) rebuilt as plan builder:
+  - 8 tool cards with checkboxes
+  - Monthly/yearly toggle
+  - Live price calculation
+  - Summary card with total + subscribe button
+
+### Migration & Backfill
+- Migration `010_user_features.sql` adds `user_features TEXT[]` with default of all 8 slugs
+- Backfilled existing users via Supabase Management API: `UPDATE profiles SET user_features = ARRAY[...] WHERE user_features IS NULL`
+- Supabase SQL endpoint: `POST /v1/projects/{ref}/database/query`
 
 ### Windows/PowerShell
 - `curl` in PS is alias for `Invoke-WebRequest` — use `curl.exe` for real curl

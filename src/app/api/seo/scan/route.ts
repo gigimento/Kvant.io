@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "monitorId required" }, { status: 400 })
     }
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("seo")
     if (!access.allowed) {
       return NextResponse.json({ error: "Subscription required. Subscribe to run brand scans." }, { status: 402 })
     }

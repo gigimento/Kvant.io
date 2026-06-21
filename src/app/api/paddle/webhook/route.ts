@@ -41,6 +41,18 @@ export async function POST(request: Request) {
           current_period_end: tx.billing_period?.ends_at || new Date().toISOString(),
         }, { onConflict: "paddle_subscription_id" })
 
+      // Save selected features from custom_data
+      const features = tx.custom_data?.features
+      if (features && typeof features === "string" && features.length > 0) {
+        const featureArray = features.split(",").map((f: string) => f.trim()).filter(Boolean)
+        if (featureArray.length > 0) {
+          await supabase
+            .from("profiles")
+            .update({ user_features: featureArray })
+            .eq("user_id", userId)
+        }
+      }
+
       // Avoid duplicate billing history rows
       const { data: existing } = await supabase
         .from("billing_history")

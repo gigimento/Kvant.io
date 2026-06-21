@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("proposals")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     const { systemPrompt, userPrompt } = buildProposalPrompt({

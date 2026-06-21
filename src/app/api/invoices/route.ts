@@ -8,7 +8,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("invoices")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     const { data, error } = await supabase
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("invoices")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     const subtotal = items.reduce((sum: number, item: any) => sum + (item.quantity || 1) * (item.rate || 0), 0)

@@ -5,37 +5,22 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, Loader, ExternalLink } from "lucide-react"
+import { Check, Loader, X } from "lucide-react"
+import { ALL_FEATURES, getPriceForSelection } from "@/lib/features"
+import { cn } from "@/lib/utils"
 
-const PRICE_IDS: Record<string, string> = {
-  monthly: "pri_01kvkva7hbtmngwv59d2hsr1yn",
-  yearly: "pri_01kvkva7qmnz1d3fhd4gtznxsr",
-}
-
-const plans = [
-  {
-    id: "monthly",
-    name: "Monthly",
-    price: "$29",
-    features: ["Narrative Reports", "Brand Radar", "Up to 5 reports/mo", "Up to 3 brand monitors", "Email support"],
-  },
-  {
-    id: "yearly",
-    name: "Yearly",
-    price: "$290",
-    period: "/year",
-    badge: "Save 17%",
-    features: ["Narrative Reports", "Brand Radar", "Up to 5 reports/mo", "Up to 3 brand monitors", "Email support", "Priority support"],
-  },
-]
+const ALL_SLUGS = ALL_FEATURES.map((f) => f.slug)
 
 export default function SubscriptionsPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [subs, setSubs] = useState<any[]>([])
   const [billing, setBilling] = useState<any[]>([])
+  const [userFeatures, setUserFeatures] = useState<string[]>(ALL_SLUGS)
+  const [selected, setSelected] = useState<string[]>([])
+  const [plan, setPlan] = useState<"monthly" | "yearly">("monthly")
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -46,33 +31,41 @@ export default function SubscriptionsPage() {
       }
       setUser(user)
 
-      const { data: subscriptions } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-      setSubs(subscriptions || [])
+      const [subRes, histRes, profileRes] = await Promise.all([
+        supabase.from("subscriptions").select("*").eq("user_id", user.id),
+        supabase.from("billing_history").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("user_features").eq("user_id", user.id).single(),
+      ])
 
-      const { data: history } = await supabase
-        .from("billing_history")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-      setBilling(history || [])
+      setSubs(subRes.data || [])
+      setBilling(histRes.data || [])
+
+      const saved = profileRes.data?.user_features
+      if (saved && Array.isArray(saved) && saved.length > 0) {
+        setUserFeatures(saved)
+        setSelected(saved.filter((s: string) => ALL_SLUGS.includes(s)))
+      } else {
+        setSelected(ALL_SLUGS)
+      }
 
       setLoading(false)
     })
   }, [router])
 
-  async function handleCheckout(planId: string) {
-    const priceId = PRICE_IDS[planId]
-    if (!priceId) return
+  function toggleFeature(slug: string) {
+    setSelected((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    )
+  }
 
-    setCheckoutLoading(planId)
+  async function handleCheckout() {
+    if (selected.length === 0) return
+    setCheckoutLoading(true)
     try {
       const res = await fetch("/api/paddle/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, plan: planId }),
+        body: JSON.stringify({ features: selected, plan }),
       })
       const data = await res.json()
       if (data.checkoutUrl) {
@@ -81,7 +74,7 @@ export default function SubscriptionsPage() {
     } catch (err) {
       console.error("Checkout failed", err)
     } finally {
-      setCheckoutLoading(null)
+      setCheckoutLoading(false)
     }
   }
 
@@ -94,23 +87,26 @@ export default function SubscriptionsPage() {
   }
 
   const activeSub = subs.find((s) => s.status === "active")
+  const count = selected.length
+  const { price: total } = getPriceForSelection(count, plan)
+  const yearlyTotal = count === 0 ? 0 : total * 10
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Subscriptions</h1>
-        <p className="text-muted-foreground">Manage your plan and billing</p>
+        <p className="text-muted-foreground">Choose the tools you need</p>
       </div>
 
-      {activeSub ? (
+      {activeSub && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="capitalize">{activeSub.product} Plan</CardTitle>
+                <CardTitle className="capitalize">Kvant Plan</CardTitle>
                 <CardDescription>
                   {activeSub.plan === "yearly" ? "Yearly billing" : "Monthly billing"} &middot;{" "}
-                  {new Date(activeSub.current_period_end).toLocaleDateString("en-US", {
+                  Renews {new Date(activeSub.current_period_end).toLocaleDateString("en-US", {
                     month: "long", day: "numeric", year: "numeric",
                   })}
                 </CardDescription>
@@ -121,54 +117,113 @@ export default function SubscriptionsPage() {
             </div>
           </CardHeader>
         </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>No active subscription</CardTitle>
-            <CardDescription>Choose a plan below to get started</CardDescription>
-          </CardHeader>
-        </Card>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {plans.map((plan) => (
-          <Card key={plan.id} className={plan.badge ? "border-accent/50" : ""}>
-            <CardHeader>
-              {plan.badge && (
-                <span className="mb-2 inline-block rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent w-fit">
-                  {plan.badge}
-                </span>
-              )}
-              <CardTitle className="text-2xl">
-                {plan.price}
-                <span className="text-sm font-normal text-muted-foreground">{plan.period || "/mo"}</span>
-              </CardTitle>
-              <CardDescription>{plan.name}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {plan.features.map((f) => (
-                <div key={f} className="flex items-center gap-3 text-sm">
-                  <Check className="h-4 w-4 text-accent shrink-0" />
-                  <span>{f}</span>
-                </div>
-              ))}
-              <Button
-                className="w-full mt-4"
-                onClick={() => handleCheckout(plan.id)}
-                disabled={checkoutLoading === plan.id || !!activeSub}
-              >
-                {checkoutLoading === plan.id ? (
-                  <Loader className="h-4 w-4 animate-spin" />
-                ) : activeSub ? (
-                  "Current Plan"
-                ) : (
-                  "Subscribe"
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Build Your Plan</CardTitle>
+              <CardDescription>Select the tools you need. Pick any combination.</CardDescription>
+            </div>
+            <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
+              <button
+                onClick={() => setPlan("monthly")}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  plan === "monthly" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"
                 )}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setPlan("yearly")}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  plan === "yearly" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"
+                )}
+              >
+                Yearly
+              </button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {ALL_FEATURES.map((feature) => {
+              const Icon = feature.icon
+              const isSelected = selected.includes(feature.slug)
+              return (
+                <button
+                  key={feature.slug}
+                  onClick={() => toggleFeature(feature.slug)}
+                  className={cn(
+                    "relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all",
+                    isSelected
+                      ? "border-accent bg-accent/5"
+                      : "border-white/10 bg-white/5 hover:border-white/20"
+                  )}
+                >
+                  {isSelected && (
+                    <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-accent">
+                      <Check className="h-3 w-3 text-white" />
+                    </span>
+                  )}
+                  <Icon className={cn("h-5 w-5", isSelected ? "text-accent" : "text-muted-foreground")} />
+                  <div>
+                    <div className="text-sm font-medium">{feature.name}</div>
+                    <div className="text-xs text-muted-foreground">{feature.description}</div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-accent/30">
+        <CardHeader>
+          <CardTitle>Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">
+                {count === 0 ? "No tools selected" : `${count} tool${count !== 1 ? "s" : ""} selected`}
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">
+                  {count === 0 ? "$0" : plan === "monthly" ? `$${total}` : `$${yearlyTotal}`}
+                </span>
+                <span className="text-muted-foreground">
+                  /{plan === "monthly" ? "mo" : "yr"}
+                </span>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              disabled={selected.length === 0 || checkoutLoading || !!activeSub}
+              onClick={handleCheckout}
+            >
+              {checkoutLoading ? (
+                <Loader className="h-4 w-4 animate-spin" />
+              ) : activeSub ? (
+                "Current Plan"
+              ) : (
+                `Subscribe — ${plan === "monthly" ? `$${total}/mo` : `$${yearlyTotal}/yr`}`
+              )}
+            </Button>
+          </div>
+
+          {count > 0 && plan === "yearly" && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Save {(1 - yearlyTotal / (total * 12)) * 100 > 0
+                ? `${Math.round((1 - yearlyTotal / (total * 12)) * 100)}%`
+                : ""} with yearly billing (2 months free)
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Billing History</h2>

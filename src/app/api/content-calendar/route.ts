@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("content-calendar")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     let query = supabase.from("content_calendar").select("*").eq("user_id", user.id)
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const access = await checkServerAccess()
+    const access = await checkServerAccess("content-calendar")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
     const { data, error } = await supabase
