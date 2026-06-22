@@ -14,7 +14,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const access = await checkServerAccess("content-calendar")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
-    const allowed = ["title", "scheduled_date", "status", "notes", "content_brief_id"]
+    const allowed = ["title", "scheduled_date", "status", "notes", "content_brief_id", "platform", "content_type", "scheduled_time", "assigned_to", "media_urls", "ai_caption", "evergreen_config"]
     const updates: Record<string, any> = {}
     for (const key of allowed) {
       if (body[key] !== undefined) updates[key] = body[key]
