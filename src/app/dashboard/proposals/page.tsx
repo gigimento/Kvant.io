@@ -73,7 +73,7 @@ export default function ProposalsPage() {
         <CardHeader><CardTitle>Create a Proposal</CardTitle><CardDescription>Fill in the details to generate a professional proposal</CardDescription></CardHeader>
         <CardContent>
           <form onSubmit={handleGenerate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Client Name *</Label>
                 <Input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="e.g., Acme Corp" required />
@@ -92,7 +92,7 @@ export default function ProposalsPage() {
               <Label>Deliverables</Label>
               <Input value={deliverables} onChange={e => setDeliverables(e.target.value)} placeholder="e.g., Website redesign, SEO audit, 5 blog posts" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Timeline</Label>
                 <Input value={timeline} onChange={e => setTimeline(e.target.value)} placeholder="e.g., 4 weeks" />
@@ -137,7 +137,7 @@ export default function ProposalsPage() {
                   </ul>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <h3 className="text-sm font-medium text-accent mb-2">Timeline</h3>
                   <p className="text-sm text-muted-foreground">{proposal.timeline}</p>

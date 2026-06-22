@@ -45,7 +45,27 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, brief })
+    const { data: saved, error: insertError } = await supabase
+      .from("content_briefs")
+      .insert({
+        user_id: user.id,
+        keyword,
+        audience: audience || null,
+        goal: goal || null,
+        title: brief.title || "",
+        outline: brief.outline || [],
+        key_points: brief.keyPoints || [],
+        faq_ideas: brief.faqIdeas || [],
+        tone_and_style: brief.toneAndStyle || null,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, brief: saved })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

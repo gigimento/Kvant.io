@@ -17,7 +17,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { data: invoice, error } = await supabase.from("invoices").select("*").eq("id", id).eq("user_id", user.id).single()
     if (error || !invoice) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-    const stream = await renderToStream(<InvoicePDF invoice={invoice} />)
+    const { data: profile } = await supabase.from("profiles").select("brand_settings").eq("id", user.id).single()
+    const brand = (profile?.brand_settings as Record<string, any>) || {}
+
+    const stream = await renderToStream(<InvoicePDF invoice={invoice} brand={brand} />)
     const chunks: Uint8Array[] = []
     for await (const chunk of stream as any) { chunks.push(chunk) }
     const pdfBuffer = Buffer.concat(chunks)

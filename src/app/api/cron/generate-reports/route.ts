@@ -1,6 +1,52 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { buildNarrativePrompt } from "@/lib/llm/prompts/narrative"
+import { fetchGA4Metrics } from "@/lib/api/ga4"
+
+async function fetchMetricsForConfig(supabase: any, config: any) {
+  const dataSources: string[] = config.data_sources || []
+  if (!dataSources.includes("ga4")) return null
+
+  const { data: conn } = await supabase
+    .from("data_connections")
+    .select("*")
+    .eq("user_id", config.user_id)
+    .eq("provider", "ga4")
+    .eq("is_valid", true)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!conn || !conn.provider_account_id) return null
+
+  const periodEnd = new Date()
+  const periodStart = new Date()
+  periodStart.setDate(periodStart.getDate() - 30)
+
+  const prevPeriodEnd = new Date(periodStart.getTime() - 86400000)
+  const prevPeriodStart = new Date(prevPeriodEnd)
+  prevPeriodStart.setDate(prevPeriodStart.getDate() - 30)
+
+  const fmt = (d: Date) => d.toISOString().split("T")[0]
+
+  const metrics = await fetchGA4Metrics(
+    conn.access_token,
+    conn.refresh_token,
+    conn.provider_account_id,
+    conn.expires_at,
+    fmt(periodStart),
+    fmt(periodEnd),
+    fmt(prevPeriodStart),
+    fmt(prevPeriodEnd),
+  )
+
+  return {
+    clientName: config.client_name,
+    periodStart: fmt(periodStart),
+    periodEnd: fmt(periodEnd),
+    metrics,
+  }
+}
 
 export async function GET(request: Request) {
   if (request.headers.get("x-vercel-cron") !== "1") {
@@ -19,34 +65,43 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, dispatched: 0 })
   }
 
-  const periodEnd = new Date()
-  const periodStart = new Date()
-  periodStart.setDate(periodStart.getDate() - 30)
-
   let dispatched = 0
   for (const config of configs) {
-    const mockData = {
-      clientName: config.client_name,
-      periodStart: periodStart.toISOString().split("T")[0],
-      periodEnd: periodEnd.toISOString().split("T")[0],
-      metrics: {
-        sessions: 12543, users: 8932, pageviews: 45231,
-        bounceRate: 38.5, avgSessionDuration: 187,
-        sessionsChange: 12.3, usersChange: 8.7,
-        topPages: [
-          { path: "/pricing", views: 4521 },
-          { path: "/blog/top-10-tips", views: 3210 },
-          { path: "/features", views: 2890 },
-        ],
-        sessionsBySource: [
-          { source: "Organic Search", sessions: 4520 },
-          { source: "Direct", sessions: 3210 },
-          { source: "Social", sessions: 2340 },
-        ],
-      },
+    let reportData: any = null
+    try {
+      reportData = await fetchMetricsForConfig(supabase, config)
+    } catch (err) {
+      console.warn("Cron GA4 fetch failed for config", config.id, err)
     }
 
-    const prompt = buildNarrativePrompt(mockData)
+    if (!reportData) {
+      const periodEnd = new Date()
+      const periodStart = new Date()
+      periodStart.setDate(periodStart.getDate() - 30)
+
+      reportData = {
+        clientName: config.client_name,
+        periodStart: periodStart.toISOString().split("T")[0],
+        periodEnd: periodEnd.toISOString().split("T")[0],
+        metrics: {
+          sessions: 12543, users: 8932, pageviews: 45231,
+          bounceRate: 38.5, avgSessionDuration: 187,
+          sessionsChange: 12.3, usersChange: 8.7,
+          topPages: [
+            { path: "/pricing", views: 4521 },
+            { path: "/blog/top-10-tips", views: 3210 },
+            { path: "/features", views: 2890 },
+          ],
+          sessionsBySource: [
+            { source: "Organic Search", sessions: 4520 },
+            { source: "Direct", sessions: 3210 },
+            { source: "Social", sessions: 2340 },
+          ],
+        },
+      }
+    }
+
+    const prompt = buildNarrativePrompt(reportData)
 
     const { data: report } = await supabase
       .from("reports")
@@ -54,9 +109,9 @@ export async function GET(request: Request) {
         config_id: config.id,
         user_id: config.user_id,
         client_name: config.client_name,
-        period_start: periodStart.toISOString().split("T")[0],
-        period_end: periodEnd.toISOString().split("T")[0],
-        raw_data: mockData,
+        period_start: reportData.periodStart,
+        period_end: reportData.periodEnd,
+        raw_data: reportData,
         narrative_prompt: prompt,
         status: "pending",
       })
@@ -75,7 +130,6 @@ export async function GET(request: Request) {
       next_run_at: nextRun.toISOString(),
     }).eq("id", config.id)
 
-    // Dispatch to process-single via internal fetch (fire-and-forget)
     const origin = request.headers.get("origin") || request.headers.get("host") || "localhost:3000"
     const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
     fetch(`${baseUrl}/api/reports/process-single`, {

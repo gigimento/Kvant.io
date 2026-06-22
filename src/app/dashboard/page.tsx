@@ -86,16 +86,23 @@ function StatSkeleton() {
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) {
         router.push("/login")
-      } else {
-        setUser(data.user)
+        return
       }
+      setUser(data.user)
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", data.user.id)
+        .single()
+      if (prof) setProfile(prof)
       setLoading(false)
     })
   }, [router])
@@ -122,7 +129,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.email?.split("@")[0] || "there"}
+          Welcome back, {profile?.full_name || user?.email?.split("@")[0] || "there"}
         </p>
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

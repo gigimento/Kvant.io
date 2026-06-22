@@ -141,7 +141,7 @@ export default function InvoicesPage() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="skeleton-text" />
             <div className="skeleton-text-short" />
@@ -159,12 +159,12 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Invoices</h1>
           <p className="text-muted-foreground">Create and manage client invoices</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setShowForm(!showForm)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4" />
           {showForm ? "Cancel" : "New Invoice"}
         </Button>
@@ -177,7 +177,7 @@ export default function InvoicesPage() {
           <CardHeader><CardTitle>New Invoice</CardTitle><CardDescription>Fill in the details below</CardDescription></CardHeader>
           <CardContent>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Client Name *</Label>
                   <Input value={clientName} onChange={e => setClientName(e.target.value)} required />
@@ -191,22 +191,35 @@ export default function InvoicesPage() {
               <div className="space-y-2">
                 <Label>Line Items</Label>
                 {items.map((item, i) => (
-                  <div key={i} className="flex gap-2 items-start">
-                    <Input placeholder="Description" value={item.description} onChange={e => updateItem(i, "description", e.target.value)} className="flex-[3]" />
-                    <Input type="number" min="1" placeholder="Qty" value={item.quantity} onChange={e => updateItem(i, "quantity", parseInt(e.target.value) || 1)} className="flex-1" />
-                    <Input type="number" min="0" step="0.01" placeholder="Rate" value={item.rate} onChange={e => updateItem(i, "rate", parseFloat(e.target.value) || 0)} className="flex-1" />
-                    <span className="flex items-center text-sm text-muted-foreground w-20">${(item.quantity * item.rate).toFixed(2)}</span>
-                    {items.length > 1 && (
-                      <button type="button" onClick={() => removeItem(i)} className="p-2 text-red-400 hover:text-red-300">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                  <div key={i} className="space-y-2 sm:space-y-0 sm:flex sm:gap-2 sm:items-start p-3 rounded-lg bg-primary/20 border border-white/5">
+                    <div className="sm:flex-[3]">
+                      <Label className="text-xs text-muted-foreground sm:hidden">Description</Label>
+                      <Input placeholder="Description" value={item.description} onChange={e => updateItem(i, "description", e.target.value)} />
+                    </div>
+                    <div className="flex gap-2 sm:gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs text-muted-foreground sm:hidden">Qty</Label>
+                        <Input type="number" min="1" placeholder="Qty" value={item.quantity} onChange={e => updateItem(i, "quantity", parseInt(e.target.value) || 1)} />
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-xs text-muted-foreground sm:hidden">Rate</Label>
+                        <Input type="number" min="0" step="0.01" placeholder="Rate" value={item.rate} onChange={e => updateItem(i, "rate", parseFloat(e.target.value) || 0)} />
+                      </div>
+                      <div className="flex items-end sm:items-center gap-2">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap pb-2 sm:pb-0">${(item.quantity * item.rate).toFixed(2)}</span>
+                        {items.length > 1 && (
+                          <button type="button" onClick={() => removeItem(i)} className="p-2 text-red-400 hover:text-red-300 pb-2 sm:pb-0">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
                 <button type="button" onClick={addItem} className="text-sm text-accent hover:underline">+ Add item</button>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Tax Rate (%)</Label>
                   <Input type="number" min="0" step="0.1" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
@@ -238,23 +251,27 @@ export default function InvoicesPage() {
         <div className="space-y-3">
           {invoices.map((inv, i) => (
             <Card key={inv.id} className="reveal" style={{ transitionDelay: `${i * 60}ms` }}>
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-4">
-                  <FileText className="h-8 w-8 text-accent/50" />
-                  <div>
-                    <p className="font-medium">{inv.invoice_number}</p>
-                    <p className="text-sm text-muted-foreground">{inv.client_name}</p>
+              <CardContent className="py-4 px-4 sm:px-6">
+                <div className="flex items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <FileText className="h-8 w-8 text-accent/50 shrink-0 mt-1 sm:mt-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{inv.invoice_number}</p>
+                      <p className="text-sm text-muted-foreground truncate">{inv.client_name}</p>
+                    </div>
                   </div>
-                  <span className={`text-xs font-medium capitalize ${statusColors[inv.status] || ""}`}>{inv.status}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-accent">${inv.total.toFixed(2)}</span>
-                  <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" className="text-muted-foreground hover:text-white transition-colors">
-                    <Download className="h-4 w-4" />
-                  </a>
-                  <button onClick={() => deleteInvoice(inv.id)} className="text-muted-foreground hover:text-red-400 transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <span className="font-bold text-accent block sm:inline">${inv.total.toFixed(2)}</span>
+                      <span className={`text-xs font-medium capitalize ${statusColors[inv.status] || ""} block sm:inline sm:ml-2`}>{inv.status}</span>
+                    </div>
+                    <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" className="text-muted-foreground hover:text-white transition-colors">
+                      <Download className="h-4 w-4" />
+                    </a>
+                    <button onClick={() => deleteInvoice(inv.id)} className="text-muted-foreground hover:text-red-400 transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

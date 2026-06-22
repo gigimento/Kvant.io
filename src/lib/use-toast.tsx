@@ -37,7 +37,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-3 pointer-events-none w-[calc(100vw-2rem)] sm:w-auto">
         {toasts.map((toast) => (
           <ToastItem
             key={toast.id}
@@ -73,7 +73,7 @@ function ToastItem({
 }) {
   return (
     <div
-      className={`animate-slide-in-right pointer-events-auto flex min-w-[280px] max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur-xl ${variantStyles[toast.variant]}`}
+      className={`animate-slide-in-right pointer-events-auto flex w-full sm:min-w-[280px] sm:max-w-sm items-start gap-3 rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur-xl ${variantStyles[toast.variant]}`}
       role="alert"
     >
       <div className="flex-1">{toast.message}</div>

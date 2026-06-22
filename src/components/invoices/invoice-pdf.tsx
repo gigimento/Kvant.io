@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer"
 
 interface InvoiceItem {
   description: string
@@ -20,35 +20,59 @@ interface InvoiceData {
   created_at: string
 }
 
-const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: "Helvetica" },
-  headerBar: { backgroundColor: "#27262E", padding: 20, marginBottom: 24 },
-  companyName: { color: "#E19C63", fontSize: 18, fontWeight: "bold" },
-  invoiceTitle: { color: "#FFFFFF", fontSize: 12, marginTop: 4 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
-  section: { flex: 1 },
-  label: { color: "#8BA5BE", fontSize: 9, marginBottom: 4 },
-  value: { color: "#27262E", fontSize: 11 },
-  tableHeader: { flexDirection: "row", backgroundColor: "#27262E", padding: 8 },
-  tableHeaderText: { color: "#FFFFFF", fontSize: 9, fontWeight: "bold", flex: 1 },
-  tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#E5E7EB", padding: 8 },
-  tableCell: { fontSize: 9, flex: 1, color: "#27262E" },
-  tableCellRight: { fontSize: 9, flex: 1, textAlign: "right", color: "#27262E" },
-  totalsSection: { marginTop: 24, alignItems: "flex-end" },
-  totalRow: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 4 },
-  totalLabel: { fontSize: 10, color: "#8BA5BE", width: 80 },
-  totalValue: { fontSize: 10, color: "#27262E", width: 80, textAlign: "right" },
-  grandTotal: { fontSize: 14, fontWeight: "bold", color: "#E19C63", marginTop: 8 },
-  footer: { position: "absolute", bottom: 40, left: 40, right: 40, textAlign: "center", color: "#8BA5BE", fontSize: 8, borderTopWidth: 1, borderTopColor: "#E5E7EB", paddingTop: 12 },
-})
+interface BrandSettings {
+  company_name?: string
+  logo_url?: string
+  primary_color?: string
+  accent_color?: string
+  secondary_color?: string
+}
 
-export function InvoicePDF({ invoice }: { invoice: InvoiceData }) {
+interface InvoicePDFProps {
+  invoice: InvoiceData
+  brand?: BrandSettings
+}
+
+export function InvoicePDF({ invoice, brand = {} }: InvoicePDFProps) {
+  const primary = brand.primary_color || "#27262E"
+  const accent = brand.accent_color || "#E19C63"
+  const secondary = brand.secondary_color || "#8BA5BE"
+  const companyName = brand.company_name || "Kvant"
+  const logoUrl = brand.logo_url || null
+
+  const styles = StyleSheet.create({
+    page: { padding: 40, fontFamily: "Helvetica" },
+    headerBar: { backgroundColor: primary, padding: 20, marginBottom: 24, flexDirection: "row", alignItems: "center", gap: 12 },
+    logo: { width: 40, height: 40, objectFit: "contain" },
+    headerText: { flex: 1 },
+    companyName: { color: accent, fontSize: 18, fontWeight: "bold" },
+    invoiceTitle: { color: "#FFFFFF", fontSize: 12, marginTop: 4 },
+    row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 24 },
+    section: { flex: 1 },
+    label: { color: secondary, fontSize: 9, marginBottom: 4 },
+    value: { color: primary, fontSize: 11 },
+    tableHeader: { flexDirection: "row", backgroundColor: primary, padding: 8 },
+    tableHeaderText: { color: "#FFFFFF", fontSize: 9, fontWeight: "bold", flex: 1 },
+    tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#E5E7EB", padding: 8 },
+    tableCell: { fontSize: 9, flex: 1, color: primary },
+    tableCellRight: { fontSize: 9, flex: 1, textAlign: "right", color: primary },
+    totalsSection: { marginTop: 24, alignItems: "flex-end" },
+    totalRow: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 4 },
+    totalLabel: { fontSize: 10, color: secondary, width: 80 },
+    totalValue: { fontSize: 10, color: primary, width: 80, textAlign: "right" },
+    grandTotal: { fontSize: 14, fontWeight: "bold", color: accent, marginTop: 8 },
+    footer: { position: "absolute", bottom: 40, left: 40, right: 40, textAlign: "center", color: secondary, fontSize: 8, borderTopWidth: 1, borderTopColor: "#E5E7EB", paddingTop: 12 },
+  })
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerBar}>
-          <Text style={styles.companyName}>Kvant</Text>
-          <Text style={styles.invoiceTitle}>INVOICE {invoice.invoice_number}</Text>
+          {logoUrl && <Image style={styles.logo} src={logoUrl} />}
+          <View style={styles.headerText}>
+            <Text style={styles.companyName}>{companyName}</Text>
+            <Text style={styles.invoiceTitle}>INVOICE {invoice.invoice_number}</Text>
+          </View>
         </View>
 
         <View style={styles.row}>
@@ -98,7 +122,7 @@ export function InvoicePDF({ invoice }: { invoice: InvoiceData }) {
           </View>
         </View>
 
-        <Text style={styles.footer}>Kvant — kvantio.vercel.app</Text>
+        <Text style={styles.footer}>{companyName} — kvantio.vercel.app</Text>
       </Page>
     </Document>
   )

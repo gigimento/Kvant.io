@@ -200,7 +200,7 @@ export default function SubscriptionsPage() {
           <CardTitle>Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="text-sm text-muted-foreground">
                 {count === 0 ? "No tools selected" : `${count} tool${count !== 1 ? "s" : ""} selected`}
@@ -218,6 +218,7 @@ export default function SubscriptionsPage() {
               size="lg"
               disabled={selected.length === 0 || checkoutLoading || !!activeSub}
               onClick={handleCheckout}
+              className="w-full sm:w-auto"
             >
               {checkoutLoading ? (
                 <Loader className="h-4 w-4 animate-spin" />
@@ -249,14 +250,14 @@ export default function SubscriptionsPage() {
         ) : (
           <div className="space-y-2">
             {billing.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-lg border border-white/5 px-4 py-3 text-sm">
+              <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-white/5 px-4 py-3 text-sm">
                 <div>
                   <span className="capitalize font-medium">{item.product}</span>
                   <span className="text-muted-foreground ml-2">
                     {item.plan === "yearly" ? "Yearly" : "Monthly"}
                   </span>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                   <span>${item.amount} {item.currency}</span>
                   <span className={item.status === "completed" ? "text-green-400" : "text-yellow-400"}>
                     {item.status}

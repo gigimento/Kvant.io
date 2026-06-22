@@ -35,7 +35,7 @@ export default function ReportsPage() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="skeleton-text" />
             <div className="skeleton-text-short" />
@@ -53,12 +53,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Narrative Reports</h1>
           <p className="text-muted-foreground">AI-powered client reports in plain English</p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/dashboard/reports/new"><Plus className="mr-1 h-4 w-4" /> New Report</Link>
         </Button>
       </div>
@@ -88,10 +88,10 @@ export default function ReportsPage() {
               style={{ transitionDelay: `${i * 60}ms` }}
             >
               <Card className="transition-all hover:border-accent/30 hover:shadow-[0_0_20px_rgba(225,156,99,0.1)] cursor-pointer">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{config.name}</CardTitle>
-                    <CardDescription>Client: {config.client_name}</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base truncate">{config.name}</CardTitle>
+                    <CardDescription className="truncate">Client: {config.client_name}</CardDescription>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge variant={config.is_active ? "success" : "secondary"}>

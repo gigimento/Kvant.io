@@ -36,27 +36,29 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/dashboard/connections?error=token_exchange`)
   }
 
-  // Get account info
-  const accountResponse = await fetch(
-    "https://analyticsadmin.googleapis.com/v1beta/accountSummaries",
-    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
-  )
-  const accounts = await accountResponse.json()
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.redirect(`${origin}/login`)
   }
 
-  const accountName = accounts.accountSummaries?.[0]?.displayName || "GA4 Account"
+  const accountResponse = await fetch(
+    "https://analyticsadmin.googleapis.com/v1beta/accountSummaries",
+    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+  )
+  const accounts = await accountResponse.json()
+
+  const firstProperty = accounts.accountSummaries?.[0]?.propertySummaries?.[0]
+  const propertyId = firstProperty?.property?.replace("properties/", "") || ""
+  const propertyName = firstProperty?.displayName || "GA4 Account"
 
   await supabase.from("data_connections").insert({
     user_id: user.id,
     provider: "ga4",
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
-    provider_account_name: accountName,
+    provider_account_id: propertyId,
+    provider_account_name: propertyName,
     expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
   })
 
