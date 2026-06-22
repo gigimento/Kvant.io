@@ -14,47 +14,6 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-html.light {
-  --color-primary: #f8f6f3;
-  --color-accent: #d4844a;
-  --color-secondary: #6b8fa0;
-  --color-background: #f8f6f3;
-  --color-foreground: #1a1a1e;
-  --color-muted: #8b8b8b;
-  --color-muted-foreground: #6b6b70;
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-card: rgba(255, 255, 255, 0.8);
-  color-scheme: light;
-}
-
-html.light body {
-  background: var(--color-primary);
-  color: var(--color-foreground);
-}
-
-html.light .noise-bg {
-  opacity: 0.3;
-}
-
-html.light .text-gradient {
-  background: linear-gradient(to right, #d4844a, #e8a86a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-html.light .text-gradient-shift {
-  background: linear-gradient(to right, #d4844a, #6b8fa0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-html.light ::selection {
-  background: rgba(212, 132, 74, 0.3);
-  color: #1a1a1e;
-}
-
 body {
   background: var(--color-primary);
   color: var(--color-foreground);

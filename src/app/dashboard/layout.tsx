@@ -4,15 +4,9 @@ import { useState } from 'react'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { OnboardingGuard } from '@/components/dashboard/onboarding-guard'
 import { ToastProvider } from '@/lib/use-toast'
-import { useTheme } from '@/lib/use-theme'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmailVerificationBanner } from '@/components/dashboard/email-verification-banner'
-
-function ThemeInit() {
-  useTheme()
-  return null
-}
 
 export default function DashboardLayout({
   children,
@@ -23,7 +17,6 @@ export default function DashboardLayout({
 
   return (
     <ToastProvider>
-      <ThemeInit />
       <div className="flex h-screen overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto bg-primary">

@@ -3,10 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Palette, Calendar, Receipt, Presentation, Settings, Sun, Moon, X } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { useTheme } from "@/lib/use-theme"
 import { useState, useEffect } from "react"
 
 const navItems = [
@@ -32,7 +31,6 @@ export function Sidebar({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { theme, toggle, mounted } = useTheme()
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
@@ -93,19 +91,6 @@ export function Sidebar({
             {userEmail}
           </div>
         )}
-        <button
-          onClick={toggle}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-white"
-        >
-          {!mounted ? (
-            <div className="h-4 w-4" />
-          ) : theme === "dark" ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
-          )}
-          {!mounted ? "" : theme === "dark" ? "Light Mode" : "Dark Mode"}
-        </button>
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-white"
