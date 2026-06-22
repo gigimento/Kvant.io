@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     }
     if (platform) {
       const platforms = platform.split(",")
-      query = query.contains("platform", platforms)
+      query = query.overlaps("platform", platforms)
     }
     if (assignedTo) {
       query = query.eq("assigned_to", assignedTo)
