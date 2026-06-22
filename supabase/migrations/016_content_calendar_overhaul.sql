@@ -17,8 +17,8 @@ ALTER TABLE content_calendar ADD CONSTRAINT content_calendar_status_check
   CHECK (status IN ('draft', 'review', 'approved', 'scheduled', 'published'));
 
 -- New indexes
-CREATE INDEX IF NOT EXISTS idx_calendar_status ON content_calendar(user_id, status);
-CREATE INDEX IF NOT EXISTS idx_calendar_assigned ON content_calendar(user_id, assigned_to);
+CREATE INDEX IF NOT EXISTS idx_content_calendar_status ON content_calendar(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_content_calendar_assigned ON content_calendar(user_id, assigned_to);
 
 -- Comments table
 CREATE TABLE IF NOT EXISTS calendar_comments (
@@ -55,4 +55,4 @@ CREATE POLICY "Users can delete own comments"
   ON calendar_comments FOR DELETE
   USING (auth.uid() = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_calendar_comments_entry ON calendar_comments(entry_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_comments_entry_id ON calendar_comments(entry_id);
