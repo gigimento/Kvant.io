@@ -7,6 +7,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const month = searchParams.get("month")
     const year = searchParams.get("year")
+    const status = searchParams.get("status")
+    const platform = searchParams.get("platform")
+    const assignedTo = searchParams.get("assigned_to")
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -15,14 +18,28 @@ export async function GET(request: Request) {
     const access = await checkServerAccess("content-calendar")
     if (!access.allowed) return NextResponse.json({ error: "Subscription required" }, { status: 402 })
 
-    let query = supabase.from("content_calendar").select("*").eq("user_id", user.id)
+    let query = supabase
+      .from("content_calendar")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("scheduled_date", { ascending: true })
     if (month && year) {
-      const start = `${year}-${month.padStart(2, "0")}-01`
+      const startOfMonth = `${year}-${month.padStart(2, "0")}-01`
       const endDate = new Date(parseInt(year), parseInt(month), 0)
-      const end = `${year}-${month.padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`
-      query = query.gte("scheduled_date", start).lte("scheduled_date", end)
+      const endOfMonth = `${year}-${month.padStart(2, "0")}-${String(endDate.getDate()).padStart(2, "0")}`
+      query = query.gte("scheduled_date", startOfMonth).lte("scheduled_date", endOfMonth)
     }
-    query = query.order("scheduled_date", { ascending: true })
+    if (status) {
+      const statuses = status.split(",")
+      query = query.in("status", statuses)
+    }
+    if (platform) {
+      const platforms = platform.split(",")
+      query = query.contains("platform", platforms)
+    }
+    if (assignedTo) {
+      query = query.eq("assigned_to", assignedTo)
+    }
 
     const { data, error } = await query
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -35,7 +52,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { title, scheduled_date, content_brief_id, notes, status } = await request.json()
+    const { title, scheduled_date, platform, content_type, scheduled_time, assigned_to, media_urls, ai_caption, evergreen_config, content_brief_id, notes, status } = await request.json()
     if (!title || !scheduled_date) {
       return NextResponse.json({ error: "title and scheduled_date are required" }, { status: 400 })
     }
@@ -49,7 +66,21 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("content_calendar")
-      .insert({ user_id: user.id, title, scheduled_date, content_brief_id: content_brief_id || null, notes: notes || null, status: status || "draft" })
+      .insert({
+        user_id: user.id,
+        title,
+        scheduled_date,
+        platform: platform || [],
+        content_type: content_type || null,
+        scheduled_time: scheduled_time || null,
+        assigned_to: assigned_to || null,
+        media_urls: media_urls || [],
+        ai_caption: ai_caption || null,
+        evergreen_config: evergreen_config || null,
+        status: status || "draft",
+        content_brief_id: content_brief_id || null,
+        notes: notes || null,
+      })
       .select()
       .single()
 
