@@ -15,6 +15,30 @@ interface LLMResponse {
   }
 }
 
+async function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+async function callWithRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 2000
+): Promise<T> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (err: any) {
+      if (attempt === maxRetries) throw err
+      const status = err?.message?.includes("429") ? 429 : 0
+      if (status !== 429) throw err
+      const delay = baseDelay * Math.pow(2, attempt)
+      console.warn(`LLM 429 rate limited — retry ${attempt + 1}/${maxRetries} after ${delay}ms`)
+      await sleep(delay)
+    }
+  }
+  throw new Error("callWithRetry: exhausted retries")
+}
+
 async function callGemini(prompt: string, model: string): Promise<LLMResponse> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`
 
@@ -52,10 +76,18 @@ export async function askLLM(
   prompt: string,
   model: LLMModel = "fast"
 ): Promise<LLMResponse> {
-  return callGemini(prompt, MODEL_MAP[model])
+  return callWithRetry(() => callGemini(prompt, MODEL_MAP[model]))
 }
 
 export async function askLLMWithSystem(
+  systemPrompt: string,
+  userPrompt: string,
+  model: LLMModel = "fast"
+): Promise<LLMResponse> {
+  return callWithRetry(() => askLLMWithSystemInner(systemPrompt, userPrompt, model))
+}
+
+async function askLLMWithSystemInner(
   systemPrompt: string,
   userPrompt: string,
   model: LLMModel = "fast"

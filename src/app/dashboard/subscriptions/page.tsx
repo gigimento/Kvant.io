@@ -80,8 +80,17 @@ export default function SubscriptionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader className="h-6 w-6 animate-spin text-accent" />
+      <div className="space-y-8">
+        <div>
+          <div className="skeleton-text" />
+          <div className="skeleton-text-short" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="skeleton-card" />
+          ))}
+        </div>
+        <div className="skeleton-card" />
       </div>
     )
   }
@@ -150,7 +159,7 @@ export default function SubscriptionsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {ALL_FEATURES.map((feature) => {
+            {ALL_FEATURES.map((feature, i) => {
               const Icon = feature.icon
               const isSelected = selected.includes(feature.slug)
               return (
@@ -158,15 +167,16 @@ export default function SubscriptionsPage() {
                   key={feature.slug}
                   onClick={() => toggleFeature(feature.slug)}
                   className={cn(
-                    "relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all",
+                    "relative flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all reveal",
                     isSelected
                       ? "border-accent bg-accent/5"
                       : "border-white/10 bg-white/5 hover:border-white/20"
                   )}
+                  style={{ transitionDelay: `${i * 60}ms` }}
                 >
                   {isSelected && (
                     <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-accent">
-                      <Check className="h-3 w-3 text-white" />
+                      <Check className="h-3 w-3 text-white animate-scale-check" />
                     </span>
                   )}
                   <Icon className={cn("h-5 w-5", isSelected ? "text-accent" : "text-muted-foreground")} />
@@ -181,7 +191,7 @@ export default function SubscriptionsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-accent/30">
+      <Card className="border-accent/30 reveal" style={{ transitionDelay: "120ms" }}>
         <CardHeader>
           <CardTitle>Summary</CardTitle>
         </CardHeader>
@@ -225,7 +235,7 @@ export default function SubscriptionsPage() {
         </CardContent>
       </Card>
 
-      <div>
+      <div className="reveal" style={{ transitionDelay: "180ms" }}>
         <h2 className="text-lg font-semibold mb-4">Billing History</h2>
         {billing.length === 0 ? (
           <p className="text-sm text-muted-foreground">No billing history yet.</p>

@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Palette, Calendar, Receipt, Presentation } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Palette, Calendar, Receipt, Presentation, Sun, Moon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { useTheme } from "@/lib/use-theme"
 
 const navItems = [
   {
@@ -68,6 +69,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, toggle, mounted } = useTheme()
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -76,8 +78,8 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex w-64 flex-col border-r border-white/5 bg-primary/50">
-      <div className="flex h-16 items-center gap-2 border-b border-white/5 px-6">
+    <aside className="flex w-64 flex-col border-r border-border bg-primary/50">
+      <div className="flex h-16 items-center gap-2 border-b border-border px-6">
         <Link href="/dashboard" className="text-lg font-bold tracking-tight">
           Kvant
         </Link>
@@ -91,19 +93,35 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors relative",
                 isActive
                   ? "bg-accent/10 text-accent"
                   : "text-muted-foreground hover:bg-white/5 hover:text-white"
               )}
             >
-              <Icon className="h-4 w-4" />
+              {isActive && (
+                <span className="absolute left-1 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-green-400 animate-glow-pulse" />
+              )}
+              <Icon className="h-4 w-4 ml-3" />
               {item.label}
             </Link>
           )
         })}
       </nav>
-      <div className="border-t border-white/5 p-4">
+      <div className="border-t border-border p-4 space-y-2">
+        <button
+          onClick={toggle}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-white"
+        >
+          {!mounted ? (
+            <div className="h-4 w-4" />
+          ) : theme === "dark" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+          {!mounted ? "" : theme === "dark" ? "Light Mode" : "Dark Mode"}
+        </button>
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-white/5 hover:text-white"

@@ -285,3 +285,20 @@ When switching providers, libraries, or making any cross-cutting change:
 - `Invoke-RestMethod` with `-Body (ConvertTo-Json $obj)` for JSON APIs
 - Here-strings require content on new line after `@'`
 - `Add-Content` appends to files, `Set-Content` writes
+
+### Claude Desktop MCP Config (2026-06-21 update)
+- Location: `C:\Users\Igor\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`
+- **16 MCP servers** configured: memory, mermaid, fetch, git, sql, neondb, sentry, wikis, desktop-projects, duckduckgo, sequential-thinking, excel, obsidian, ppt, supabase, vercel
+- **Wiki paths fixed**: SMT wikis must use `_SMT` prefix — `C:\Users\Igor\Desktop\_SMT\SMT Command Centar\wikis\smt-engineering` (NOT `C:\Users\Igor\Desktop\SMT Command Centar\...`)
+- **Broken sql-server removed**: old `C:\mcp-sql\server.py` didn't exist. Replaced with working `sql` MCP (Python, `asyncpg`, read-only SELECT queries via DATABASE_URL env var) and `neondb` MCP (Neon API management via httpx)
+- **Sentry MCP**: `@sentry/mcp-server` npm package, needs `SENTRY_AUTH_TOKEN` env var
+- **Neon MCP**: custom Python server at `C:\mcp-sql\neon_server.py`, uses `NEON_API_KEY` env var, provides `list_projects`, `get_project`, `list_branches` tools
+- **Env vars in Claude config**: API keys embedded in `env` blocks per MCP server (Neon, Sentry, Obsidian)
+- Docker Desktop and GDrive skipped (Docker not installed, GDrive via Claude built-in)
+
+### API Keys in Knowledge Graph
+- All 4 API tokens stored in memory/knowledge graph (MCP memory server):
+  - `neon-api-key`: Neon API management (`napi_...`)
+  - `sentry-auth-token`: Sentry error tracking (`sntryu_...`)
+  - `supabase-mgmt-token`: Supabase Management API (`sbp_...`)
+  - `vercel-api-token`: Vercel project management (`vcp_...`)

@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus, ArrowRight, Loader2 } from "lucide-react"
+import { Search, Plus, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default function SEOPage() {
@@ -25,7 +25,24 @@ export default function SEOPage() {
     })
   }, [router])
 
-  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="skeleton-text" />
+            <div className="skeleton-text-short" />
+          </div>
+          <div className="h-10 w-36 skeleton" />
+        </div>
+        <div className="grid gap-4">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -38,19 +55,30 @@ export default function SEOPage() {
       </div>
 
       {monitors.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 animate-fade-in-blur">
           <CardContent>
-            <Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="font-semibold">No monitors yet</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Create your first brand monitor.</p>
-            <Button className="mt-6" asChild><Link href="/dashboard/seo/new"><Plus className="mr-1 h-4 w-4" /> Create Monitor</Link></Button>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center animate-float-icon">
+              <Search className="h-8 w-8 text-accent/60" />
+            </div>
+            <div className="animate-glow-pulse rounded-2xl p-6">
+              <h3 className="font-semibold">No monitors yet</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Create your first brand monitor.</p>
+              <Button className="mt-6 animate-fade-in-blur" style={{ animationDelay: "0.3s" }} asChild>
+                <Link href="/dashboard/seo/new"><Plus className="mr-1 h-4 w-4" /> Create Monitor</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {monitors.map((m) => (
-            <Link key={m.id} href={`/dashboard/seo/${m.id}`}>
-              <Card className="transition-colors hover:border-accent/30 cursor-pointer">
+          {monitors.map((m, i) => (
+            <Link
+              key={m.id}
+              href={`/dashboard/seo/${m.id}`}
+              className="reveal block"
+              style={{ transitionDelay: `${i * 60}ms` }}
+            >
+              <Card className="transition-all hover:border-accent/30 hover:shadow-[0_0_20px_rgba(225,156,99,0.1)] cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-base">{m.brand_name}</CardTitle>

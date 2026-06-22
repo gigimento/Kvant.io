@@ -19,9 +19,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, scanned: 0 })
   }
 
+async function throttle(ms = 4000) {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
   let scanned = 0
   for (const monitor of monitors) {
     for (const keyword of monitor.keywords) {
+      await throttle()
+
       const prompt = buildBrandScanPrompt({
         brandName: monitor.brand_name,
         competitors: monitor.competitors || [],
@@ -53,6 +59,8 @@ export async function GET(request: Request) {
 
     // SOV scan on first keyword
     if (monitor.keywords.length > 0) {
+      await throttle()
+
       try {
         const sovPrompt = buildShareOfVoicePrompt({
           brandName: monitor.brand_name,

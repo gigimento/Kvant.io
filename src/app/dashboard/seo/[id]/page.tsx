@@ -6,10 +6,56 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Search, Loader2, Sparkles } from "lucide-react"
+import { ArrowLeft, Search, Sparkles, ThumbsUp, ThumbsDown, Minus } from "lucide-react"
 import Link from "next/link"
 import { formatDate } from "@/lib/utils"
 import { SubscriptionGate } from "@/components/dashboard/subscription-gate"
+
+function SentimentDonut({ positive, negative, neutral }: { positive: number; negative: number; neutral: number }) {
+  const total = positive + negative + neutral
+  if (total === 0) return <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">No data</div>
+
+  const posPct = positive / total
+  const negPct = negative / total
+  const neuPct = neutral / total
+
+  const radius = 50
+  const circum = 2 * Math.PI * radius
+  const posLen = circum * posPct
+  const negLen = circum * negPct
+  const neuLen = circum * neuPct
+
+  return (
+    <div className="flex items-center gap-6">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="16" />
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="#22c55e" strokeWidth="16"
+          strokeDasharray={`${posLen} ${circum - posLen}`}
+          strokeDashoffset={-neuLen - negLen}
+          transform="rotate(-90 60 60)"
+          strokeLinecap="round"
+        />
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="#ef4444" strokeWidth="16"
+          strokeDasharray={`${negLen} ${circum - negLen}`}
+          strokeDashoffset={-neuLen}
+          transform="rotate(-90 60 60)"
+          strokeLinecap="round"
+        />
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="#a855f7" strokeWidth="16"
+          strokeDasharray={`${neuLen} ${circum - neuLen}`}
+          strokeDashoffset="0"
+          transform="rotate(-90 60 60)"
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 text-xs"><ThumbsUp className="h-3.5 w-3.5 text-green-400" /> <span className="text-muted-foreground">Positive</span> <span className="font-medium">{positive}</span></div>
+        <div className="flex items-center gap-2 text-xs"><ThumbsDown className="h-3.5 w-3.5 text-red-400" /> <span className="text-muted-foreground">Negative</span> <span className="font-medium">{negative}</span></div>
+        <div className="flex items-center gap-2 text-xs"><Minus className="h-3.5 w-3.5 text-purple-400" /> <span className="text-muted-foreground">Neutral</span> <span className="font-medium">{neutral}</span></div>
+      </div>
+    </div>
+  )
+}
 
 export default function MonitorDetailPage() {
   const params = useParams()
@@ -50,9 +96,27 @@ export default function MonitorDetailPage() {
   }
 
   const positiveMentions = mentions.filter((m) => m.sentiment === "positive").length
+  const negativeMentions = mentions.filter((m) => m.sentiment === "negative").length
+  const neutralMentions = mentions.filter((m) => m.sentiment === "neutral").length
   const totalMentions = mentions.length
+  const sentimentScore = totalMentions > 0 ? Math.round((positiveMentions / totalMentions) * 100) : 0
 
-  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-accent" /></div>
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <div className="skeleton-text-short" />
+          <div className="skeleton-text" />
+          <div className="skeleton-text-short" />
+        </div>
+        <div className="grid gap-6 sm:grid-cols-3">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    )
+  }
   if (!monitor) return <div className="text-center py-16"><p className="text-muted-foreground">Monitor not found.</p><Button className="mt-4" asChild><Link href="/dashboard/seo">Back</Link></Button></div>
 
   return (
@@ -67,22 +131,40 @@ export default function MonitorDetailPage() {
           <p className="text-muted-foreground">{(monitor.competitors as any[])?.join(", ") || "No competitors"} &middot; {monitor.schedule}</p>
         </div>
         <Button onClick={handleScan} disabled={scanning}>
-          {scanning ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Scanning...</> : <><Sparkles className="mr-1 h-4 w-4" /> Run Scan</>}
+          {scanning ? <><Sparkles className="mr-1 h-4 w-4 animate-spin" /> Scanning...</> : <><Sparkles className="mr-1 h-4 w-4" /> Run Scan</>}
         </Button>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Scans</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalMentions}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Positive Mentions</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-400">{positiveMentions}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Sentiment Score</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{totalMentions > 0 ? Math.round((positiveMentions / totalMentions) * 100) : 0}%</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Positive</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-400">{positiveMentions}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Negative</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-red-400">{negativeMentions}</div></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Sentiment Score</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{sentimentScore}%</div></CardContent></Card>
       </div>
 
+      <Card>
+        <CardHeader><CardTitle>Sentiment Breakdown</CardTitle></CardHeader>
+        <CardContent>
+          <SentimentDonut positive={positiveMentions} negative={negativeMentions} neutral={neutralMentions} />
+        </CardContent>
+      </Card>
+
       {mentions.length === 0 ? (
-        <Card className="text-center py-12"><CardContent><Search className="mx-auto mb-4 h-12 w-12 text-muted-foreground" /><h3 className="font-semibold">No scans yet</h3><p className="mt-2 text-sm text-muted-foreground">Run your first scan.</p></CardContent></Card>
+        <Card className="text-center py-12 animate-fade-in-blur">
+          <CardContent>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center animate-float-icon">
+              <Search className="h-8 w-8 text-accent/60" />
+            </div>
+            <div className="animate-glow-pulse rounded-2xl p-6">
+              <h3 className="font-semibold">No scans yet</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Run your first scan to see brand mentions.</p>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-3">
-          {mentions.map((m) => (
-            <Card key={m.id}>
+          {mentions.map((m, i) => (
+            <Card key={m.id} className="reveal" style={{ transitionDelay: `${i * 60}ms` }}>
               <CardHeader className="flex flex-row items-center justify-between py-3">
                 <div className="flex items-center gap-2">
                   <Badge variant={m.sentiment === "positive" ? "success" : m.sentiment === "negative" ? "danger" : "secondary"}>{m.sentiment}</Badge>

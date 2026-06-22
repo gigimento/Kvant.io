@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { askLLMWithSystem } from "@/lib/llm/client"
 import { buildNarrativePrompt } from "@/lib/llm/prompts/narrative"
 
 export async function GET(request: Request) {
@@ -17,15 +16,15 @@ export async function GET(request: Request) {
     .lte("next_run_at", new Date().toISOString())
 
   if (!configs?.length) {
-    return NextResponse.json({ success: true, generated: 0 })
+    return NextResponse.json({ success: true, dispatched: 0 })
   }
 
-  let generated = 0
-  for (const config of configs) {
-    const periodEnd = new Date()
-    const periodStart = new Date()
-    periodStart.setDate(periodStart.getDate() - 30)
+  const periodEnd = new Date()
+  const periodStart = new Date()
+  periodStart.setDate(periodStart.getDate() - 30)
 
+  let dispatched = 0
+  for (const config of configs) {
     const mockData = {
       clientName: config.client_name,
       periodStart: periodStart.toISOString().split("T")[0],
@@ -47,6 +46,8 @@ export async function GET(request: Request) {
       },
     }
 
+    const prompt = buildNarrativePrompt(mockData)
+
     const { data: report } = await supabase
       .from("reports")
       .insert({
@@ -56,43 +57,35 @@ export async function GET(request: Request) {
         period_start: periodStart.toISOString().split("T")[0],
         period_end: periodEnd.toISOString().split("T")[0],
         raw_data: mockData,
-        status: "generating",
+        narrative_prompt: prompt,
+        status: "pending",
       })
       .select()
       .single()
 
     if (!report) continue
 
-    try {
-      const prompt = buildNarrativePrompt(mockData)
-      const llmResponse = await askLLMWithSystem(
-        "You are a senior marketing analyst writing client reports.",
-        prompt,
-        "quality"
-      )
-      await supabase.from("reports").update({
-        narrative_text: llmResponse.content,
-        status: "ready",
-      }).eq("id", report.id)
-
-      // Update next_run_at based on schedule
-      const nextRun = new Date()
-      if (config.schedule === "weekly") {
-        nextRun.setDate(nextRun.getDate() + 7)
-      } else {
-        nextRun.setMonth(nextRun.getMonth() + 1)
-      }
-      await supabase.from("report_configs").update({
-        next_run_at: nextRun.toISOString(),
-      }).eq("id", config.id)
-
-      generated++
-    } catch {
-      await supabase.from("reports").update({
-        status: "failed",
-      }).eq("id", report.id)
+    const nextRun = new Date()
+    if (config.schedule === "weekly") {
+      nextRun.setDate(nextRun.getDate() + 7)
+    } else {
+      nextRun.setMonth(nextRun.getMonth() + 1)
     }
+    await supabase.from("report_configs").update({
+      next_run_at: nextRun.toISOString(),
+    }).eq("id", config.id)
+
+    // Dispatch to process-single via internal fetch (fire-and-forget)
+    const origin = request.headers.get("origin") || request.headers.get("host") || "localhost:3000"
+    const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
+    fetch(`${baseUrl}/api/reports/process-single`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reportId: report.id }),
+    }).catch(() => {})
+
+    dispatched++
   }
 
-  return NextResponse.json({ success: true, generated })
+  return NextResponse.json({ success: true, dispatched })
 }

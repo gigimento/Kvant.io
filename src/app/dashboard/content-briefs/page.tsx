@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Copy, Check, Sparkles, CalendarPlus } from "lucide-react"
 import { format } from "date-fns"
+import { useToast } from "@/lib/use-toast"
 
 interface ContentBrief {
   title: string
@@ -20,6 +21,7 @@ interface ContentBrief {
 
 export default function ContentBriefsPage() {
   const router = useRouter()
+  const { addToast } = useToast()
   const [keyword, setKeyword] = useState("")
   const [audience, setAudience] = useState("")
   const [goal, setGoal] = useState("")
@@ -51,6 +53,7 @@ export default function ContentBriefsPage() {
         setError(data.error)
       } else {
         setBrief(data.brief)
+        addToast("Brief generated successfully", "success")
       }
     } catch {
       setError("Failed to generate brief. Please try again.")
@@ -61,6 +64,7 @@ export default function ContentBriefsPage() {
   function copyToClipboard(text: string, section: string) {
     navigator.clipboard.writeText(text)
     setCopiedSection(section)
+    addToast("Copied to clipboard", "info")
     setTimeout(() => setCopiedSection(null), 2000)
   }
 
@@ -136,6 +140,7 @@ export default function ContentBriefsPage() {
                         body: JSON.stringify({ title: `Brief: ${brief.title}`, scheduled_date: scheduleDate }),
                       })
                       setScheduled(true)
+                      addToast("Added to calendar", "success")
                     } catch {}
                     setScheduling(false)
                   }} disabled={!scheduleDate || scheduling}>
@@ -146,13 +151,13 @@ export default function ContentBriefsPage() {
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="reveal">
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle>Suggested Title</CardTitle>
               </div>
               <button onClick={() => copyToClipboard(brief.title, "title")} className="text-muted-foreground hover:text-white transition-colors">
-                {copiedSection === "title" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copiedSection === "title" ? <Check className="h-4 w-4 text-green-400 animate-scale-check" /> : <Copy className="h-4 w-4" />}
               </button>
             </CardHeader>
             <CardContent>
@@ -160,13 +165,13 @@ export default function ContentBriefsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="reveal" style={{ transitionDelay: "60ms" }}>
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle>Article Outline</CardTitle>
               </div>
               <button onClick={() => copyToClipboard(brief.outline.join("\n"), "outline")} className="text-muted-foreground hover:text-white transition-colors">
-                {copiedSection === "outline" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copiedSection === "outline" ? <Check className="h-4 w-4 text-green-400 animate-scale-check" /> : <Copy className="h-4 w-4" />}
               </button>
             </CardHeader>
             <CardContent>
@@ -178,13 +183,13 @@ export default function ContentBriefsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="reveal" style={{ transitionDelay: "120ms" }}>
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle>Key Points</CardTitle>
               </div>
               <button onClick={() => copyToClipboard(brief.keyPoints.join("\n"), "points")} className="text-muted-foreground hover:text-white transition-colors">
-                {copiedSection === "points" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copiedSection === "points" ? <Check className="h-4 w-4 text-green-400 animate-scale-check" /> : <Copy className="h-4 w-4" />}
               </button>
             </CardHeader>
             <CardContent>
@@ -196,13 +201,13 @@ export default function ContentBriefsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="reveal" style={{ transitionDelay: "180ms" }}>
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle>FAQ Ideas</CardTitle>
               </div>
               <button onClick={() => copyToClipboard(brief.faqIdeas.map(f => `Q: ${f.question}\nA: ${f.answer}`).join("\n\n"), "faq")} className="text-muted-foreground hover:text-white transition-colors">
-                {copiedSection === "faq" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copiedSection === "faq" ? <Check className="h-4 w-4 text-green-400 animate-scale-check" /> : <Copy className="h-4 w-4" />}
               </button>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -215,13 +220,13 @@ export default function ContentBriefsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="reveal" style={{ transitionDelay: "240ms" }}>
             <CardHeader className="flex flex-row items-start justify-between">
               <div>
                 <CardTitle>Tone & Style</CardTitle>
               </div>
               <button onClick={() => copyToClipboard(brief.toneAndStyle, "tone")} className="text-muted-foreground hover:text-white transition-colors">
-                {copiedSection === "tone" ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copiedSection === "tone" ? <Check className="h-4 w-4 text-green-400 animate-scale-check" /> : <Copy className="h-4 w-4" />}
               </button>
             </CardHeader>
             <CardContent>

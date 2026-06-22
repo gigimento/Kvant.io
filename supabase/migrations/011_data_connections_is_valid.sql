@@ -1,0 +1,2 @@
+ALTER TABLE data_connections
+ADD COLUMN IF NOT EXISTS is_valid BOOLEAN DEFAULT true;

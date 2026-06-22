@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Download, FileText, Loader2, Trash2 } from "lucide-react"
+import { Plus, Download, FileText, Trash2 } from "lucide-react"
+import { useToast } from "@/lib/use-toast"
 
 interface InvoiceItem {
   description: string
@@ -29,8 +30,37 @@ interface Invoice {
   created_at: string
 }
 
+function RevenueSparkline() {
+  const data = [1200, 1800, 1400, 2100, 2800, 2400, 3100, 3600, 2900, 3400, 4000, 3800]
+  const max = Math.max(...data)
+  const w = 320
+  const h = 60
+  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * (h - 4)}`).join(" ")
+  const area = `M0,${h} ${points} ${w},${h}Z`
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-muted-foreground">Revenue Trend</h3>
+        <span className="text-xs text-green-400">+12% vs last year</span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16">
+        <path d={area} fill="url(#revenue-grad)" opacity="0.15" />
+        <path d={points} fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <defs>
+          <linearGradient id="revenue-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent)" />
+            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  )
+}
+
 export default function InvoicesPage() {
   const router = useRouter()
+  const { addToast } = useToast()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -78,6 +108,7 @@ export default function InvoicesPage() {
       setInvoices(prev => [data.invoice, ...prev])
       setShowForm(false)
       resetForm()
+      addToast("Invoice created successfully", "success")
     }
     setSaving(false)
   }
@@ -90,6 +121,7 @@ export default function InvoicesPage() {
   async function deleteInvoice(id: string) {
     await fetch(`/api/invoices/${id}`, { method: "DELETE" })
     setInvoices(prev => prev.filter(i => i.id !== id))
+    addToast("Invoice deleted", "info")
   }
 
   function addItem() { setItems(prev => [...prev, { description: "", quantity: 1, rate: 0 }]) }
@@ -106,7 +138,24 @@ export default function InvoicesPage() {
     draft: "text-yellow-400", sent: "text-blue-400", paid: "text-green-400", cancelled: "text-muted-foreground",
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="skeleton-text" />
+            <div className="skeleton-text-short" />
+          </div>
+          <div className="h-10 w-36 skeleton" />
+        </div>
+        <div className="grid gap-4">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -120,6 +169,8 @@ export default function InvoicesPage() {
           {showForm ? "Cancel" : "New Invoice"}
         </Button>
       </div>
+
+      {invoices.length > 0 && <RevenueSparkline />}
 
       {showForm && (
         <Card>
@@ -173,7 +224,7 @@ export default function InvoicesPage() {
               </div>
 
               <Button type="submit" disabled={saving || !clientName || items.every(i => !i.description)}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {saving ? <FileText className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                 {saving ? "Creating..." : "Create Invoice"}
               </Button>
             </form>
@@ -185,8 +236,8 @@ export default function InvoicesPage() {
         <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">No invoices yet. Create your first one.</p></CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {invoices.map(inv => (
-            <Card key={inv.id}>
+          {invoices.map((inv, i) => (
+            <Card key={inv.id} className="reveal" style={{ transitionDelay: `${i * 60}ms` }}>
               <CardContent className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-4">
                   <FileText className="h-8 w-8 text-accent/50" />

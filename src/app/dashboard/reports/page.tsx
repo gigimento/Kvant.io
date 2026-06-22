@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Plus, ArrowRight, Loader2 } from "lucide-react"
+import { FileText, Plus, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default function ReportsPage() {
@@ -34,8 +34,19 @@ export default function ReportsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="skeleton-text" />
+            <div className="skeleton-text-short" />
+          </div>
+          <div className="h-10 w-32 skeleton" />
+        </div>
+        <div className="grid gap-4">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+        </div>
       </div>
     )
   }
@@ -53,21 +64,30 @@ export default function ReportsPage() {
       </div>
 
       {configs.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="text-center py-12 animate-fade-in-blur">
           <CardContent>
-            <FileText className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="text-lg font-semibold">No reports yet</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Create your first report config.</p>
-            <Button className="mt-6" asChild>
-              <Link href="/dashboard/reports/new"><Plus className="mr-1 h-4 w-4" /> Create Report Config</Link>
-            </Button>
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center animate-float-icon">
+              <FileText className="h-8 w-8 text-accent/60" />
+            </div>
+            <div className="animate-glow-pulse rounded-2xl p-6">
+              <h3 className="text-lg font-semibold">No reports yet</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Create your first report config.</p>
+              <Button className="mt-6 animate-fade-in-blur" style={{ animationDelay: "0.3s" }} asChild>
+                <Link href="/dashboard/reports/new"><Plus className="mr-1 h-4 w-4" /> Create Report Config</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
-          {configs.map((config) => (
-            <Link key={config.id} href={`/dashboard/reports/${config.id}`}>
-              <Card className="transition-colors hover:border-accent/30 cursor-pointer">
+          {configs.map((config, i) => (
+            <Link
+              key={config.id}
+              href={`/dashboard/reports/${config.id}`}
+              className="reveal block"
+              style={{ transitionDelay: `${i * 60}ms` }}
+            >
+              <Card className="transition-all hover:border-accent/30 hover:shadow-[0_0_20px_rgba(225,156,99,0.1)] cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-base">{config.name}</CardTitle>
