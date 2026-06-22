@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Loader2, Copy, Check, Sparkles, CalendarPlus, Trash2, Clock, ChevronLeft } from "lucide-react"
 import { format } from "date-fns"
 import { useToast } from "@/lib/use-toast"
+import { AiFillModal } from "@/components/calendar/ai-fill-modal"
 
 interface ContentBrief {
   id: string
@@ -54,6 +55,8 @@ export default function ContentBriefsPage() {
   const [scheduled, setScheduled] = useState(false)
   const [savedBriefs, setSavedBriefs] = useState<ContentBrief[]>([])
   const [showHistory, setShowHistory] = useState(true)
+  const [aiFillBriefId, setAiFillBriefId] = useState<string | null>(null)
+  const [showAiModal, setShowAiModal] = useState(false)
 
   useEffect(() => {
     fetchSavedBriefs()
@@ -229,7 +232,13 @@ export default function ContentBriefsPage() {
                     <CardDescription>Add this brief to your content calendar</CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
+                  <button
+                    onClick={() => { setAiFillBriefId(brief.id); setShowAiModal(true) }}
+                    className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 w-full justify-center"
+                  >
+                    <Sparkles className="h-4 w-4" /> Generate Post
+                  </button>
                   {scheduled ? (
                     <p className="text-sm text-green-400">Added to calendar for {format(new Date(scheduleDate), "MMMM d, yyyy")}</p>
                   ) : (
@@ -256,6 +265,30 @@ export default function ContentBriefsPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {showAiModal && aiFillBriefId === brief.id && (
+                <AiFillModal
+                  briefId={aiFillBriefId}
+                  onSchedule={async (caption) => {
+                    const supabase = createClient()
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (!user) return
+                    const date = new Date().toISOString().split("T")[0]
+                    await supabase.from("content_calendar").insert({
+                      user_id: user.id,
+                      title: `Post: ${brief.title}`,
+                      scheduled_date: scheduleDate || date,
+                      ai_caption: caption,
+                      ai_generated: true,
+                      content_brief_id: brief.id,
+                      status: "draft",
+                    })
+                    setShowAiModal(false)
+                    addToast("Post generated and added to calendar", "success")
+                  }}
+                  onClose={() => setShowAiModal(false)}
+                />
+              )}
               <Card className="reveal">
                 <CardHeader className="flex flex-row items-start justify-between">
                   <div>
