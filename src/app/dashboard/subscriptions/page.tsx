@@ -21,6 +21,7 @@ export default function SubscriptionsPage() {
   const [plan, setPlan] = useState<"monthly" | "yearly">("monthly")
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState("")
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,6 +62,7 @@ export default function SubscriptionsPage() {
   async function handleCheckout() {
     if (selected.length === 0) return
     setCheckoutLoading(true)
+    setCheckoutError("")
     try {
       const res = await fetch("/api/paddle/create-checkout", {
         method: "POST",
@@ -70,9 +72,11 @@ export default function SubscriptionsPage() {
       const data = await res.json()
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl
+      } else {
+        setCheckoutError(data.error || "Failed to create checkout")
       }
-    } catch (err) {
-      console.error("Checkout failed", err)
+    } catch (err: any) {
+      setCheckoutError(err.message || "Network error")
     } finally {
       setCheckoutLoading(false)
     }
@@ -223,6 +227,9 @@ export default function SubscriptionsPage() {
                 `Subscribe — ${plan === "monthly" ? `$${total}/mo` : `$${yearlyTotal}/yr`}`
               )}
             </Button>
+            {checkoutError && (
+              <p className="mt-2 text-sm text-red-400">{checkoutError}</p>
+            )}
           </div>
 
           {count > 0 && plan === "yearly" && (

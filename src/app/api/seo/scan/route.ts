@@ -26,6 +26,7 @@ export async function POST(request: Request) {
       .from("brand_monitors")
       .select("*")
       .eq("id", monitorId)
+      .eq("user_id", user.id)
       .single()
 
     if (!monitor) {

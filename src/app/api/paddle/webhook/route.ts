@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import crypto from "crypto"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 const WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     const event = JSON.parse(rawBody)
     const eventType = event.event_type
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     async function handleTransaction(tx: any) {
       const userId = tx.custom_data?.user_id
@@ -136,13 +137,12 @@ async function verifyPaddleSignature(
   secret: string
 ): Promise<boolean> {
   try {
-    const crypto = await import("crypto")
     const parts = signatureHeader.split(";")
     const ts = parts.find((p) => p.startsWith("ts="))?.slice(3)
     const sig = parts.find((p) => p.startsWith("sig="))?.slice(4)
     if (!ts || !sig) return false
     const signedContent = `${ts}:${body}`
-    const expected = crypto.default
+    const expected = crypto
       .createHmac("sha256", secret)
       .update(signedContent)
       .digest("hex")

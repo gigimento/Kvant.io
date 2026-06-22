@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       .from("report_configs")
       .select("*")
       .eq("id", configId)
+      .eq("user_id", user.id)
       .single()
 
     if (!config) {
