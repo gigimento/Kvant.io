@@ -296,6 +296,9 @@ When switching providers, libraries, or making any cross-cutting change:
 - **Env vars in Claude config**: API keys embedded in `env` blocks per MCP server (Neon, Sentry, Obsidian)
 - Docker Desktop and GDrive skipped (Docker not installed, GDrive via Claude built-in)
 
+## Workflow Preference (2026-06-22)
+- **Design-first approach**: For complex features, present a design in sections → user reviews and approves each section → write design doc → implement. This reduces rework and gives the user control over the architecture before code is written. User explicitly confirmed this as preferred workflow.
+
 ### API Keys in Knowledge Graph
 - All 4 API tokens stored in memory/knowledge graph (MCP memory server):
   - `neon-api-key`: Neon API management (`napi_...`)
