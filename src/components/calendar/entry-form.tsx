@@ -112,7 +112,7 @@ export function EntryForm({ entry, prefill, onSave, onClose }: Props) {
         </div>
 
         <label className="block text-sm font-medium mb-1 text-muted-foreground">Title *</label>
-        <input className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm mb-4" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+        <input className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white placeholder:text-muted-foreground mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
 
         <label className="block text-sm font-medium mb-2 text-muted-foreground">Platforms *</label>
         <div className="flex flex-wrap gap-2 mb-4">
@@ -128,45 +128,45 @@ export function EntryForm({ entry, prefill, onSave, onClose }: Props) {
         </div>
 
         <label className="block text-sm font-medium mb-1 text-muted-foreground">Content Type</label>
-        <select className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm mb-4" value={form.content_type} onChange={e => setForm(f => ({ ...f, content_type: e.target.value }))}>
+        <select className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.content_type} onChange={e => setForm(f => ({ ...f, content_type: e.target.value }))}>
           {CONTENT_TYPES.map(ct => <option key={ct.id} value={ct.id}>{ct.label}</option>)}
         </select>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-muted-foreground">Date</label>
-            <input type="date" className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" value={form.scheduled_date} onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))} />
+            <input type="date" className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.scheduled_date} onChange={e => setForm(f => ({ ...f, scheduled_date: e.target.value }))} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-muted-foreground">Time</label>
-            <input type="time" className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" value={form.scheduled_time} onChange={e => setForm(f => ({ ...f, scheduled_time: e.target.value }))} />
+            <input type="time" className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.scheduled_time} onChange={e => setForm(f => ({ ...f, scheduled_time: e.target.value }))} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-muted-foreground">Assigned To</label>
-            <select className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" value={form.assigned_to || ""} onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value || null }))}>
+            <select className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.assigned_to || ""} onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value || null }))}>
               <option value="">Unassigned</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.id.slice(0, 8)}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1 text-muted-foreground">Status</label>
-            <select className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+            <select className="flex h-10 w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
               {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
             </select>
           </div>
         </div>
 
         <label className="block text-sm font-medium mb-1 text-muted-foreground">Caption</label>
-        <textarea className="w-full rounded-lg border border-border bg-white/5 px-3 py-2 text-sm mb-4 min-h-[100px]" value={form.ai_caption} onChange={e => setForm(f => ({ ...f, ai_caption: e.target.value }))} />
+        <textarea className="w-full rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white placeholder:text-muted-foreground mb-4 min-h-[100px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={form.ai_caption} onChange={e => setForm(f => ({ ...f, ai_caption: e.target.value }))} />
 
         <label className="block text-sm font-medium mb-1 text-muted-foreground">Media URLs</label>
         <div className="space-y-2 mb-4">
           {form.media_urls.map((url, i) => (
             <div key={i} className="flex gap-2">
-              <input className="flex-1 rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" value={url} onChange={e => updateMediaUrl(i, e.target.value)} placeholder="https://..." />
+              <input className="flex-1 rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" value={url} onChange={e => updateMediaUrl(i, e.target.value)} placeholder="https://..." />
               <button onClick={() => removeMediaUrl(i)} className="text-red-400 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
             </div>
           ))}
@@ -181,7 +181,7 @@ export function EntryForm({ entry, prefill, onSave, onClose }: Props) {
         {form.evergreen_config?.enabled && (
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1 text-muted-foreground">Interval (days)</label>
-            <input type="number" className="w-24 rounded-lg border border-border bg-white/5 px-3 py-2 text-sm" min={1} value={form.evergreen_config.interval_days || 7}
+            <input type="number" className="flex h-10 w-24 rounded-lg border border-white/10 bg-primary/50 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" min={1} value={form.evergreen_config.interval_days || 7}
               onChange={e => setForm(f => ({ ...f, evergreen_config: { ...f.evergreen_config!, interval_days: parseInt(e.target.value) || 7 } }))} />
           </div>
         )}

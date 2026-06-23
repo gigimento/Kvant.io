@@ -21,6 +21,8 @@ export default function SubscriptionsPage() {
   const [plan, setPlan] = useState<"monthly" | "yearly">("monthly")
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState("")
 
   useEffect(() => {
@@ -112,11 +114,11 @@ export default function SubscriptionsPage() {
       </div>
 
       {activeSub && (
-        <Card>
+        <Card className="border-green-500/20">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="capitalize">Kvant Plan</CardTitle>
+                <CardTitle className="capitalize">Your Plan</CardTitle>
                 <CardDescription>
                   {activeSub.plan === "yearly" ? "Yearly billing" : "Monthly billing"} &middot;{" "}
                   Renews {new Date(activeSub.current_period_end).toLocaleDateString("en-US", {
@@ -129,6 +131,50 @@ export default function SubscriptionsPage() {
               </span>
             </div>
           </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={portalLoading}
+                onClick={async () => {
+                  setPortalLoading(true)
+                  try {
+                    const res = await fetch("/api/paddle/customer-portal", { method: "POST" })
+                    const data = await res.json()
+                    if (data.portalUrl) {
+                      window.location.href = data.portalUrl
+                    }
+                  } catch {} finally {
+                    setPortalLoading(false)
+                  }
+                }}
+              >
+                {portalLoading ? "Loading..." : "Manage Subscription"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={cancelLoading}
+                className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                onClick={async () => {
+                  if (!confirm("Are you sure you want to cancel your subscription?")) return
+                  setCancelLoading(true)
+                  try {
+                    const res = await fetch("/api/paddle/cancel-subscription", { method: "POST" })
+                    const data = await res.json()
+                    if (res.ok) {
+                      router.refresh()
+                    }
+                  } catch {} finally {
+                    setCancelLoading(false)
+                  }
+                }}
+              >
+                {cancelLoading ? "Cancelling..." : "Cancel"}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       )}
 

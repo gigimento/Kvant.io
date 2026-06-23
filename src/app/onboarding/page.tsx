@@ -8,11 +8,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { FileText, Search, Check, ArrowRight } from "lucide-react"
+import { FileText, Search, Check, ArrowRight, Mail, } from "lucide-react"
 
 const features = [
-  { id: "reports", label: "Narrative Reports", icon: FileText, desc: "AI-generated client reports with narrative storytelling" },
+  { id: "reports", label: "Narrative Reports", icon: FileText, desc: "AI-generated client reports with analytics data" },
   { id: "seo", label: "Brand Radar", icon: Search, desc: "Track brand visibility across LLMs and search engines" },
+]
+
+const steps = [
+  { label: "Profile", description: "Tell us about yourself" },
+  { label: "Features", description: "Pick your tools" },
+  { label: "Verify", description: "Confirm your email" },
 ]
 
 export default function OnboardingPage() {
@@ -25,6 +31,8 @@ export default function OnboardingPage() {
   const [role, setRole] = useState("")
   const [error, setError] = useState("")
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
+  const [verificationSent, setVerificationSent] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -45,6 +53,7 @@ export default function OnboardingPage() {
       if (profile?.full_name) setFullName(profile.full_name)
       if (profile?.company_name) setCompanyName(profile.company_name)
       if (profile?.role) setRole(profile.role)
+      setEmailVerified(!!user.email_confirmed_at)
       setLoading(false)
     })
   }, [router])
@@ -72,6 +81,25 @@ export default function OnboardingPage() {
     }
     setSaving(false)
     setStep(1)
+  }
+
+  async function handleVerification() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) return
+    setSaving(true)
+    setError("")
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: user.email,
+      options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` },
+    })
+    if (resendError) {
+      setError(resendError.message)
+    } else {
+      setVerificationSent(true)
+    }
+    setSaving(false)
   }
 
   async function completeOnboarding() {
@@ -110,13 +138,36 @@ export default function OnboardingPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <Link href="/" className="text-lg font-bold tracking-tight">Kvant</Link>
-          <CardTitle className="mt-4">
-            {step === 0 ? "Welcome to Kvant" : "What brings you here?"}
+          <div className="mt-6 flex items-center justify-center gap-2">
+            {steps.map((s, i) => (
+              <div key={s.label} className="flex items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  i <= step ? "bg-accent text-white" : "bg-white/10 text-muted-foreground"
+                }`}>
+                  {i < step ? <Check className="h-4 w-4" /> : i + 1}
+                </div>
+                <span className={`hidden sm:inline text-sm ${
+                  i === step ? "text-white font-medium" : "text-muted-foreground"
+                }`}>
+                  {s.label}
+                </span>
+                {i < steps.length - 1 && (
+                  <div className={`hidden sm:block h-px w-6 ${
+                    i < step ? "bg-accent" : "bg-white/10"
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <CardTitle className="mt-6">
+            {step === 0 ? "Welcome to Kvant" : step === 1 ? "What brings you here?" : "Verify your email"}
           </CardTitle>
           <CardDescription>
             {step === 0
               ? "Tell us a bit about yourself"
-              : "Pick the features you want to use"}
+              : step === 1
+              ? "Pick the features you want to use"
+              : "Confirm your email address to get started"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -150,7 +201,7 @@ export default function OnboardingPage() {
                 {saving ? "Saving..." : "Continue"} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
-          ) : (
+          ) : step === 1 ? (
             <div className="space-y-4">
               {features.map((f) => {
                 const selected = selectedFeatures.includes(f.id)
@@ -180,9 +231,58 @@ export default function OnboardingPage() {
                 )
               })}
               {error && <p className="text-sm text-red-400">{error}</p>}
-              <Button onClick={completeOnboarding} className="w-full" disabled={saving}>
-                {saving ? "Setting up..." : "Go to Dashboard"} <ArrowRight className="ml-1 h-4 w-4" />
+              <Button onClick={() => setStep(2)} className="w-full" disabled={saving}>
+                Continue <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 text-center">
+              <div className="flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+                  {emailVerified ? (
+                    <Check className="h-8 w-8 text-green-400" />
+                  ) : (
+                    <Mail className="h-8 w-8 text-yellow-400" />
+                  )}
+                </div>
+              </div>
+              {emailVerified ? (
+                <div>
+                  <p className="text-muted-foreground mt-2">Your email is verified. You&apos;re all set!</p>
+                  <Button onClick={completeOnboarding} className="mt-6" disabled={saving}>
+                    {saving ? "Loading..." : "Go to Dashboard"} <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-muted-foreground mt-2">
+                    We sent a verification email. Click the link in the email to confirm your address.
+                  </p>
+                  {verificationSent && (
+                    <p className="text-sm text-green-400 mt-2">Email sent! Check your inbox.</p>
+                  )}
+                  {error && <p className="text-sm text-red-400 mt-2">{error}</p>}
+                  <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+                    <Button onClick={handleVerification} disabled={saving} variant="outline">
+                      {saving ? "Sending..." : verificationSent ? "Resend Email" : "Send Verification Email"}
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        const supabase = createClient()
+                        const { data: { user } } = await supabase.auth.getUser()
+                        if (user?.email_confirmed_at) {
+                          setEmailVerified(true)
+                        } else {
+                          setError("Email not confirmed yet. Please check your inbox and click the link.")
+                        }
+                      }}
+                      variant="outline"
+                    >
+                      I&apos;ve verified, continue
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

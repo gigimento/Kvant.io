@@ -68,6 +68,24 @@ export class PaddleClient {
     const query = status ? `?status=${status}` : ""
     return this.request(`/subscriptions${query}`)
   }
+
+  async getSubscription(subscriptionId: string) {
+    return this.request(`/subscriptions/${subscriptionId}`)
+  }
+
+  async createCustomerPortal(customerId: string) {
+    return this.request("/customers/portal-sessions", {
+      method: "POST",
+      body: JSON.stringify({ customer_id: customerId }),
+    })
+  }
+
+  async cancelSubscription(subscriptionId: string) {
+    return this.request(`/subscriptions/${subscriptionId}/cancel`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    })
+  }
 }
 
 export const paddle = new PaddleClient()

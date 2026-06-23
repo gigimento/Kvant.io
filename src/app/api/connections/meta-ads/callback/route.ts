@@ -34,7 +34,8 @@ export async function GET(request: Request) {
 
   const tokens = await tokenResponse.json()
   if (!tokenResponse.ok) {
-    return NextResponse.redirect(`${origin}/dashboard/connections?error=token_exchange`)
+    const fbError = tokens?.error?.message || "Unknown Facebook error"
+    return NextResponse.redirect(`${origin}/dashboard/connections?error=token_exchange&error_desc=${encodeURIComponent(fbError)}`)
   }
 
   // Exchange for long-lived token

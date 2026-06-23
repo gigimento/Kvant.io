@@ -45,6 +45,16 @@ async function fetchRealMetrics(supabase: any, userId: string, config: any) {
     fmt(prevPeriodEnd),
   )
 
+  if (metrics.refreshedToken && metrics.newExpiresAt) {
+    await supabase
+      .from("data_connections")
+      .update({
+        access_token: metrics.refreshedToken,
+        expires_at: metrics.newExpiresAt,
+      })
+      .eq("id", conn.id)
+  }
+
   return {
     clientName: config.client_name,
     periodStart: fmt(periodStart),

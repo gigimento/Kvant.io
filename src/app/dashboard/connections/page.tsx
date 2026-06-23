@@ -33,6 +33,7 @@ const providers = [
     desc: "Monitor ad account metrics: impressions, clicks, spend, reach, and CTR.",
     connectUrl: "/api/connections/meta-ads",
     color: "text-blue-400",
+    warning: "Requires Meta app to be Live (not Development mode)",
     envCheck: "META_APP_ID",
   },
 ]
@@ -44,6 +45,7 @@ export default function ConnectionsPage() {
   const searchParams = useSearchParams()
   const success = searchParams.get("success")
   const errorParam = searchParams.get("error")
+  const errorDesc = searchParams.get("error_desc")
   const [user, setUser] = useState<any>(null)
   const [connections, setConnections] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -99,10 +101,29 @@ export default function ConnectionsPage() {
         </div>
       )}
       {errorParam && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {errorParam === "not_configured"
-            ? "This integration is not configured yet. Set the required environment variables."
-            : "Connection failed. Please try again."}
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 space-y-1">
+          <p className="font-medium">
+            {errorParam === "not_configured"
+              ? "This integration is not configured yet."
+              : errorParam === "meta_denied"
+              ? "Meta Ads connection was denied."
+              : errorParam === "token_exchange"
+              ? "Meta Ads connection failed."
+              : "Connection failed."}
+          </p>
+          {errorDesc && (
+            <p className="text-xs text-red-300/70">{errorDesc}</p>
+          )}
+          {errorParam === "token_exchange" && (
+            <p className="text-xs text-red-300/70 mt-1">
+              Make sure your Meta app is out of Development mode or that you are added as a test user.
+              Go to{" "}
+              <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-red-200">
+                Facebook Developers
+              </a>{" "}
+              to check your app status.
+            </p>
+          )}
         </div>
       )}
 
@@ -127,6 +148,9 @@ export default function ConnectionsPage() {
                 <CardDescription>{provider.desc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
+                {(provider as any).warning && !connected && (
+                  <p className="text-xs text-yellow-400/70 mb-1">{(provider as any).warning}</p>
+                )}
                 {connected ? (
                   <div className="space-y-2">
                     {connections

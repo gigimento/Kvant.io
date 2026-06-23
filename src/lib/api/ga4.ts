@@ -104,11 +104,15 @@ export async function fetchGA4Metrics(
   periodEnd: string,
   prevPeriodStart: string,
   prevPeriodEnd: string
-): Promise<GA4Metrics> {
+): Promise<GA4Metrics & { refreshedToken?: string; newExpiresAt?: string }> {
   let token = accessToken
+  let refreshedToken: string | undefined
+  let newExpiresAt: string | undefined
   if (new Date(expiresAt) < new Date()) {
     const refreshed = await refreshAccessToken(refreshToken)
     token = refreshed.access_token
+    refreshedToken = refreshed.access_token
+    newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString()
   }
 
   const [currentData, prevData] = await Promise.all([
@@ -149,5 +153,7 @@ export async function fetchGA4Metrics(
     usersChange: Math.round(usersChange * 10) / 10,
     topPages: sortByValue(byPage, 5).map((p) => ({ path: p.key, views: p.value })),
     sessionsBySource: sortByValue(bySource, 5).map((s) => ({ source: s.key, sessions: s.value })),
+    refreshedToken,
+    newExpiresAt,
   }
 }
