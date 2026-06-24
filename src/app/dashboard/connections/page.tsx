@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Loader, Check, X, ExternalLink, RefreshCw, BarChart3, Megaphone, MessageCircle } from "lucide-react"
+import { Loader, Check, X, ExternalLink, RefreshCw, BarChart3, Megaphone, MessageCircle, Pencil } from "lucide-react"
 
 const providers = [
   {
@@ -68,12 +68,35 @@ export default function ConnectionsPage() {
     })
   }, [router])
 
+  const [savingId, setSavingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState("")
+
   async function handleDelete(connId: string) {
     setDeleting(connId)
     const supabase = createClient()
     await supabase.from("data_connections").delete().eq("id", connId)
     setConnections((prev) => prev.filter((c) => c.id !== connId))
     setDeleting(null)
+  }
+
+  async function handleSaveAccountId(connId: string) {
+    if (!editValue.trim()) return
+    setSavingId(connId)
+    try {
+      const res = await fetch("/api/connections/update-account-id", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: connId, provider_account_id: editValue.trim() }),
+      })
+      if (res.ok) {
+        setConnections((prev) =>
+          prev.map((c) => (c.id === connId ? { ...c, provider_account_id: editValue.trim() } : c))
+        )
+        setEditingId(null)
+      }
+    } catch {}
+    setSavingId(null)
   }
 
   function hasProvider(id: ProviderId) {
@@ -152,23 +175,65 @@ export default function ConnectionsPage() {
                   <p className="text-xs text-yellow-400/70 mb-1">{(provider as any).warning}</p>
                 )}
                 {connected ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {connections
                       .filter((c) => c.provider === provider.id)
                       .map((conn) => (
-                        <div key={conn.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-sm">
-                          <span className="text-muted-foreground truncate">
-                            {conn.provider_account_name || provider.label}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(conn.id)}
-                            disabled={deleting === conn.id}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            {deleting === conn.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
-                          </Button>
+                        <div key={conn.id}>
+                          <div className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-sm">
+                            <span className="text-muted-foreground truncate">
+                              {conn.provider_account_name || provider.label}
+                              {!conn.provider_account_id && (
+                                <span className="ml-2 text-xs text-yellow-400">(no account ID set)</span>
+                              )}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              {!conn.provider_account_id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => { setEditingId(conn.id); setEditValue(conn.provider_account_id || "") }}
+                                  className="text-accent hover:text-accent/80"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(conn.id)}
+                                disabled={deleting === conn.id}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                {deleting === conn.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                              </Button>
+                            </div>
+                          </div>
+                          {editingId === conn.id && (
+                            <div className="mt-2 flex gap-2 px-3">
+                              <input
+                                type="text"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                placeholder="e.g. 123456789"
+                                className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveAccountId(conn.id)}
+                                disabled={savingId === conn.id}
+                              >
+                                {savingId === conn.id ? "Saving..." : "Save"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingId(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       ))}
                   </div>
