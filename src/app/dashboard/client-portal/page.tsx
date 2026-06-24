@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Copy, Check, ExternalLink, Plus, Users } from 'lucide-react';
+import { Loader2, Copy, Check, ExternalLink, Plus, Users, Send } from 'lucide-react';
+import { useToast } from '@/lib/use-toast';
 
 interface ClientPortal {
   id: string;
@@ -26,6 +27,8 @@ export default function ClientPortalPage() {
   const [project, setProject] = useState('');
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sendingToken, setSendingToken] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   async function loadPortals() {
     setLoading(true);
@@ -65,6 +68,22 @@ export default function ClientPortalPage() {
       setCopiedId(token);
       setTimeout(() => setCopiedId(null), 2000);
     } catch { /* ignore */ }
+  }
+
+  async function sendInvite(token: string) {
+    setSendingToken(token);
+    try {
+      const res = await fetch(`/api/client-portal/${token}/invite`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        addToast('Invite sent to client', 'success');
+      } else {
+        addToast(data.error || 'Failed to send invite', 'error');
+      }
+    } catch (e: any) {
+      addToast(e.message || 'Network error', 'error');
+    }
+    setSendingToken(null);
   }
 
   useEffect(() => { loadPortals(); }, []);
@@ -131,13 +150,26 @@ export default function ClientPortalPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Input value={getShareUrl(p.share_token)} readOnly className="text-xs" />
-                  <Button variant="outline" size="sm" onClick={() => copyLink(p.share_token)}>
+                  <Button variant="outline" size="sm" onClick={() => copyLink(p.share_token)} title="Copy link">
                     {copiedId === p.share_token ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
-                  <Button variant="outline" size="sm" asChild>
+                  <Button variant="outline" size="sm" asChild title="Open in new tab">
                     <a href={getShareUrl(p.share_token)} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4" />
                     </a>
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => sendInvite(p.share_token)}
+                    disabled={sendingToken === p.share_token}
+                    title="Send invite email"
+                  >
+                    {sendingToken === p.share_token ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">

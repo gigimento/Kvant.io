@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, Users, MousePointerClick, Eye, DollarSign, TrendingUp, BarChart, PieChart } from 'lucide-react';
@@ -15,6 +15,11 @@ interface GA4Data {
   usersChange: number;
   topPages: { path: string; views: number }[];
   sessionsBySource: { source: string; sessions: number }[];
+  sparklines?: {
+    sessions: number[];
+    users: number[];
+    pageviews: number[];
+  };
 }
 
 interface MetaData {
@@ -24,6 +29,9 @@ interface MetaData {
   reach: number;
   ctr: number;
   cpc: number;
+  sparklines?: {
+    spend: number[];
+  };
 }
 
 interface GoogleAdsCampaign {
@@ -41,6 +49,9 @@ interface GoogleAdsData {
   totalClicks: number;
   totalCost: number;
   totalConversions: number;
+  sparklines?: {
+    cost: number[];
+  };
 }
 
 interface AnalyticsData {
@@ -64,27 +75,63 @@ function formatDuration(seconds: number): string {
   return `${m}m ${s}s`;
 }
 
+/** Inline SVG bar sparkline — 7 bars, responsive, accent-colored */
+function SparklineBars({ data, className }: { data: number[]; className?: string }) {
+  if (!data || data.length === 0) return null;
+  const max = Math.max(...data, 1);
+  const barWidth = 100 / data.length;
+  return (
+    <svg
+      viewBox="0 0 100 32"
+      className={`w-full h-8 ${className || ''}`}
+      preserveAspectRatio="none"
+    >
+      {data.map((val, i) => {
+        const h = (val / max) * 28;
+        return (
+          <rect
+            key={i}
+            x={i * barWidth + barWidth * 0.15}
+            y={30 - h}
+            width={barWidth * 0.7}
+            height={Math.max(h, 1)}
+            rx={1.5}
+            className="fill-accent/70 hover:fill-accent transition-colors"
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+const PERIODS = [
+  { value: 'this_month', label: 'This Month' },
+  { value: 'last_month', label: 'Last Month' },
+  { value: 'last_90_days', label: 'Last 90 Days' },
+] as const;
+
 export default function AnalyticsHubPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [period, setPeriod] = useState('this_month');
 
-  async function loadData() {
+  const loadData = useCallback(async (selectedPeriod: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/analytics/hub');
+      const res = await fetch(`/api/analytics/hub?period=${selectedPeriod}`);
       const json = await res.json();
       setData(json);
     } catch (e) {
       console.error(e);
     }
     setLoading(false);
-  }
+  }, []);
 
   async function refresh() {
     setRefreshing(true);
     try {
-      const res = await fetch('/api/analytics/hub');
+      const res = await fetch(`/api/analytics/hub?period=${period}`);
       const json = await res.json();
       setData(json);
     } catch (e) {
@@ -93,7 +140,7 @@ export default function AnalyticsHubPage() {
     setRefreshing(false);
   }
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(period); }, [period, loadData]);
 
   const hasData = data?.sources && Object.keys(data.sources).length > 0;
 
@@ -104,10 +151,21 @@ export default function AnalyticsHubPage() {
           <h1 className="text-2xl font-bold">Analytics Hub</h1>
           <p className="text-muted-foreground">Unified metrics from all connected sources</p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-3">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+          >
+            {PERIODS.map((p) => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+          <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -128,55 +186,75 @@ export default function AnalyticsHubPage() {
           <div className="grid gap-4 md:grid-cols-4">
             {data?.sources?.ga4 && (
               <>
-                <Card>
-                  <CardHeader className="pb-2">
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="pb-0">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <Users className="h-4 w-4" />GA4 Sessions
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(data.sources.ga4.sessions)}</div>
+                  <CardContent className="pb-3">
+                    <div className="text-2xl font-bold mb-0.5">{formatNumber(data.sources.ga4.sessions)}</div>
                     <p className={`text-xs ${data.sources.ga4.sessionsChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {data.sources.ga4.sessionsChange >= 0 ? '+' : ''}{data.sources.ga4.sessionsChange}% vs last month
+                      {data.sources.ga4.sessionsChange >= 0 ? '+' : ''}{data.sources.ga4.sessionsChange}% vs last period
                     </p>
+                    {data.sources.ga4.sparklines?.sessions && (
+                      <div className="mt-2 h-8">
+                        <SparklineBars data={data.sources.ga4.sparklines.sessions} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardHeader className="pb-2">
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="pb-0">
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <Eye className="h-4 w-4" />GA4 Pageviews
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(data.sources.ga4.pageviews)}</div>
+                  <CardContent className="pb-3">
+                    <div className="text-2xl font-bold mb-0.5">{formatNumber(data.sources.ga4.pageviews)}</div>
                     <p className="text-xs text-muted-foreground">{formatNumber(data.sources.ga4.users)} users</p>
+                    {data.sources.ga4.sparklines?.pageviews && (
+                      <div className="mt-2 h-8">
+                        <SparklineBars data={data.sources.ga4.sparklines.pageviews} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </>
             )}
             {data?.sources?.meta_ads && (
-              <Card>
-                <CardHeader className="pb-2">
+              <Card className="relative overflow-hidden">
+                <CardHeader className="pb-0">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />Meta Ad Spend
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${data.sources.meta_ads.spend.toFixed(2)}</div>
+                <CardContent className="pb-3">
+                  <div className="text-2xl font-bold mb-0.5">${data.sources.meta_ads.spend.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{formatNumber(data.sources.meta_ads.impressions)} impressions</p>
+                  {data.sources.meta_ads.sparklines?.spend && (
+                    <div className="mt-2 h-8">
+                      <SparklineBars data={data.sources.meta_ads.sparklines.spend} />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
             {data?.sources?.google_ads && (
-              <Card>
-                <CardHeader className="pb-2">
+              <Card className="relative overflow-hidden">
+                <CardHeader className="pb-0">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <DollarSign className="h-4 w-4" />Google Ads Spend
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${data.sources.google_ads.totalCost.toFixed(2)}</div>
+                <CardContent className="pb-3">
+                  <div className="text-2xl font-bold mb-0.5">${data.sources.google_ads.totalCost.toFixed(2)}</div>
                   <p className="text-xs text-muted-foreground">{formatNumber(data.sources.google_ads.totalClicks)} clicks</p>
+                  {data.sources.google_ads.sparklines?.cost && (
+                    <div className="mt-2 h-8">
+                      <SparklineBars data={data.sources.google_ads.sparklines.cost} />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

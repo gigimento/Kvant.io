@@ -1,4 +1,4 @@
-import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail } from "lucide-react"
+import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail, Link2, SearchCode } from "lucide-react"
 
 export interface Feature {
   slug: string
@@ -11,6 +11,7 @@ export const ALL_FEATURES: Feature[] = [
   { slug: "reports", name: "Narrative Reports", description: "AI-generated client reports with analytics data", icon: FileText },
   { slug: "seo", name: "Brand Radar", description: "Monitor brand mentions & share of voice", icon: Search },
   { slug: "competitive", name: "Competitive Dashboard", description: "Track competitors and market positioning", icon: BarChart3 },
+  { slug: "keyword-rankings", name: "Rank Tracker", description: "Track keyword positions in Google SERP", icon: SearchCode },
   { slug: "content-briefs", name: "Content Briefs", description: "Generate SEO-optimized content briefs", icon: FileEdit },
   { slug: "content-calendar", name: "Content Calendar", description: "Plan and schedule content publishing", icon: Calendar },
   { slug: "invoices", name: "Invoices", description: "Create and manage client invoices", icon: Receipt },
@@ -23,6 +24,7 @@ export const ALL_FEATURES: Feature[] = [
   { slug: "client-portal", name: "Client Portal", description: "White-label share dashboard for clients", icon: Users },
   { slug: "scheduled-reports", name: "Scheduled Reports", description: "Automated email delivery of reports", icon: Mail },
   { slug: "referrals", name: "Referrals", description: "Referral program & share-to-earn", icon: Gift },
+  { slug: "backlinks", name: "Backlink Monitor", description: "Track referring domains and link quality", icon: Link2 },
 ]
 
 export function getFeatureBySlug(slug: string): Feature | undefined {
