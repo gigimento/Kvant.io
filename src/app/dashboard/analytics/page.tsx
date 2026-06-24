@@ -55,6 +55,8 @@ interface GoogleAdsData {
 }
 
 interface AnalyticsData {
+  hasConnections?: boolean;
+  hasErrors?: boolean;
   sources: {
     ga4?: GA4Data;
     meta_ads?: MetaData;
@@ -173,14 +175,25 @@ export default function AnalyticsHubPage() {
           <Loader2 className="h-6 w-6 animate-spin text-accent" />
         </div>
       ) : !hasData ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <BarChart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">No connected sources</p>
-            <p className="text-muted-foreground mb-4">Connect GA4, Meta Ads, or Google Ads to see analytics here.</p>
-            <Button asChild><a href="/dashboard/connections">Go to Connections</a></Button>
-          </CardContent>
-        </Card>
+        data?.hasConnections ? (
+          <Card className="border-red-500/20">
+            <CardContent className="py-12 text-center">
+              <BarChart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-lg font-medium mb-2">Data unavailable</p>
+              <p className="text-muted-foreground mb-4">Your sources are connected but data could not be fetched. Try reconnecting.</p>
+              <Button asChild variant="outline"><a href="/dashboard/connections">Reconnect Sources</a></Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <BarChart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-lg font-medium mb-2">No connected sources</p>
+              <p className="text-muted-foreground mb-4">Connect GA4, Meta Ads, or Google Ads to see analytics here.</p>
+              <Button asChild><a href="/dashboard/connections">Go to Connections</a></Button>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-4">

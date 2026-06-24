@@ -80,7 +80,7 @@ export async function GET(request: Request) {
       .eq('user_id', user.id);
 
     if (!connections || connections.length === 0) {
-      return NextResponse.json({ sources: [], message: 'No data connections found' });
+      return NextResponse.json({ hasConnections: false, sources: [], message: 'No data connections found' });
     }
 
     const dates = getPeriodDates(period);
@@ -168,7 +168,7 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ sources: results, errors: Object.keys(errors).length > 0 ? errors : undefined });
+    return NextResponse.json({ hasConnections: true, sources: results, hasErrors: Object.keys(errors).length > 0, errors: Object.keys(errors).length > 0 ? errors : undefined });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
