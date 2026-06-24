@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X, ScanLine, Globe, Zap, Gift } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -17,6 +17,10 @@ const navItems = [
   { href: "/dashboard/content-calendar", label: "Content Calendar", icon: Calendar },
   { href: "/dashboard/invoices", label: "Invoices", icon: Receipt },
   { href: "/dashboard/proposals", label: "Proposals", icon: Presentation },
+  { href: "/dashboard/citation-audit", label: "AI Citation Audit", icon: ScanLine },
+  { href: "/dashboard/aeo", label: "AEO Foundations", icon: Globe },
+  { href: "/dashboard/agentic", label: "Agentic Readiness", icon: Zap },
+  { href: "/dashboard/referrals", label: "Referrals", icon: Gift },
   { href: "/dashboard/connections", label: "Connections", icon: Link2 },
   { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },

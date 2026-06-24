@@ -123,3 +123,6 @@ async function askLLMWithSystemInner(
     },
   }
 }
+
+export type { LLMProvider } from './providers';
+export { callProvider, PROVIDER_CONFIG_KEY } from './providers';

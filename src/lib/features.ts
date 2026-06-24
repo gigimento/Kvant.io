@@ -1,4 +1,4 @@
-import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette } from "lucide-react"
+import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette, ScanLine, Globe, Zap, Gift } from "lucide-react"
 
 export interface Feature {
   slug: string
@@ -16,6 +16,10 @@ export const ALL_FEATURES: Feature[] = [
   { slug: "invoices", name: "Invoices", description: "Create and manage client invoices", icon: Receipt },
   { slug: "proposals", name: "Proposals", description: "AI-powered proposal generation", icon: Presentation },
   { slug: "branding", name: "Branding", description: "Custom brand colors and settings", icon: Palette },
+  { slug: "citation-audit", name: "AI Citation Audit", description: "Track brand visibility across ChatGPT, Claude, Gemini & Perplexity", icon: ScanLine },
+  { slug: "aeo", name: "AEO Foundations", description: "Optimize for AI crawlers & answer engines", icon: Globe },
+  { slug: "agentic", name: "Agentic Readiness", description: "Enable AI agents to complete tasks on your site", icon: Zap },
+  { slug: "referrals", name: "Referrals", description: "Referral program & share-to-earn", icon: Gift },
 ]
 
 export function getFeatureBySlug(slug: string): Feature | undefined {
