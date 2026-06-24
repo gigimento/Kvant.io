@@ -3,13 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail, SearchCode } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail, SearchCode, Activity } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/seo-audit", label: "SEO Audit", icon: Activity },
   { href: "/dashboard/analytics", label: "Analytics Hub", icon: TrendingUp },
   { href: "/dashboard/reports", label: "Narrative Reports", icon: FileText },
   { href: "/dashboard/seo", label: "Brand Radar", icon: Search },

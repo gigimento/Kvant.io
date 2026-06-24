@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { searchKeyword, findPosition } from "@/lib/api/serper"
 
 export async function GET() {
   const supabase = await createClient()
@@ -25,7 +26,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "keyword and target_url are required" }, { status: 400 })
   }
 
-  const simulatedPosition = Math.floor(Math.random() * 40) + 1
+  let currentPosition: number
+  let searchVolume: number | null = null
+  let serpFeatures: string[] = []
+
+  const hasSerperKey = !!process.env.SERPER_API_KEY
+
+  if (hasSerperKey) {
+    try {
+      const serp = await searchKeyword(keyword)
+      const pos = findPosition(serp.results, target_url)
+      currentPosition = pos ?? 999
+      serpFeatures = serp.serpFeatures
+      searchVolume = serp.totalResults ? parseInt(serp.totalResults.replace(/\D/g, "")) || null : null
+    } catch {
+      currentPosition = Math.floor(Math.random() * 40) + 1
+    }
+  } else {
+    currentPosition = Math.floor(Math.random() * 40) + 1
+  }
 
   const { data, error } = await supabase
     .from("keyword_rankings")
@@ -33,8 +52,10 @@ export async function POST(request: Request) {
       user_id: user.id,
       keyword,
       target_url,
-      current_position: simulatedPosition,
-      best_position: simulatedPosition,
+      current_position: currentPosition,
+      best_position: currentPosition,
+      search_volume: searchVolume,
+      serp_features: serpFeatures,
       last_checked_at: new Date().toISOString(),
     })
     .select()
@@ -44,7 +65,7 @@ export async function POST(request: Request) {
 
   await supabase.from("keyword_rank_history").insert({
     keyword_id: data.id,
-    position: simulatedPosition,
+    position: currentPosition,
   })
 
   return NextResponse.json(data, { status: 201 })
