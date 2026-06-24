@@ -1,5 +1,3 @@
--- Referral system
-
 CREATE TABLE IF NOT EXISTS referral_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
@@ -11,11 +9,11 @@ CREATE TABLE IF NOT EXISTS referral_codes (
 
 ALTER TABLE referral_codes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own referral code"
+CREATE POLICY IF NOT EXISTS "Users can view own referral code"
   ON referral_codes FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own referral code"
+CREATE POLICY IF NOT EXISTS "Users can insert own referral code"
   ON referral_codes FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
@@ -30,7 +28,7 @@ CREATE TABLE IF NOT EXISTS referral_clicks (
 
 ALTER TABLE referral_clicks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own referral clicks"
+CREATE POLICY IF NOT EXISTS "Users can view own referral clicks"
   ON referral_clicks FOR SELECT
   USING (
     EXISTS (
@@ -40,6 +38,6 @@ CREATE POLICY "Users can view own referral clicks"
     )
   );
 
-CREATE POLICY "Anyone can insert referral clicks"
+CREATE POLICY IF NOT EXISTS "Anyone can insert referral clicks"
   ON referral_clicks FOR INSERT
   WITH CHECK (true);

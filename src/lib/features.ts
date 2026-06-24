@@ -1,4 +1,4 @@
-import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette, ScanLine, Globe, Zap, Gift } from "lucide-react"
+import { FileText, Search, BarChart3, FileEdit, Calendar, Receipt, Presentation, Palette, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail } from "lucide-react"
 
 export interface Feature {
   slug: string
@@ -19,6 +19,9 @@ export const ALL_FEATURES: Feature[] = [
   { slug: "citation-audit", name: "AI Citation Audit", description: "Track brand visibility across ChatGPT, Claude, Gemini & Perplexity", icon: ScanLine },
   { slug: "aeo", name: "AEO Foundations", description: "Optimize for AI crawlers & answer engines", icon: Globe },
   { slug: "agentic", name: "Agentic Readiness", description: "Enable AI agents to complete tasks on your site", icon: Zap },
+  { slug: "analytics", name: "Analytics Hub", description: "Unified GA4, Meta Ads & Google Ads dashboard", icon: TrendingUp },
+  { slug: "client-portal", name: "Client Portal", description: "White-label share dashboard for clients", icon: Users },
+  { slug: "scheduled-reports", name: "Scheduled Reports", description: "Automated email delivery of reports", icon: Mail },
   { slug: "referrals", name: "Referrals", description: "Referral program & share-to-earn", icon: Gift },
 ]
 

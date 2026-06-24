@@ -299,6 +299,29 @@ When switching providers, libraries, or making any cross-cutting change:
 ## Workflow Preference (2026-06-22)
 - **Design-first approach**: For complex features, present a design in sections → user reviews and approves each section → write design doc → implement. This reduces rework and gives the user control over the architecture before code is written. User explicitly confirmed this as preferred workflow.
 
+## Session Learnings (2026-06-24)
+
+### 6 agency-agent features built & deployed
+- **AI Citation Audit** (#1): scans brand across ChatGPT/Claude/Gemini/Perplexity, 20 prompts × 4 platforms, fix pack generation
+- **SEO Scan Enhancement** (#2): multi-provider LLM, tech SEO audit via regex HTML parsing, keyword research, on-page analysis
+- **Content Brief Enhancement** (#3): DB-backed briefs with SERP analysis, content gap, keyword data + history UI
+- **AEO Foundations** (#4): AI crawler audit, robots.txt/llms.txt fetch, llms.txt generation with copy
+- **Agentic Readiness** (#5): WebMCP check, task completion scoring, friction points + hostile patterns detection
+- **Growth/Referrals** (#6): referral codes, click tracking with IP/UA, stats dashboard + share buttons
+- **Multi-provider LLM system**: `src/lib/llm/providers.ts` dispatches to OpenAI/Anthropic/Gemini/Perplexity; `client.ts` re-exports `callProvider`/`LLMProvider`
+- **All 6 features gated** behind `SubscriptionGate` with feature slugs from `features.ts`
+
+### Merge conflict pattern
+- Remote was force-pushed (squashed history), local had diverged
+- Fix: `git fetch origin`, `git reset --hard origin/master`, `git cherry-pick <commit>`, resolve conflicts, `npm run build`
+- For rewritten files (complete rewrites): `git checkout --theirs <path>`
+- For shared config (sidebar, features.ts): manually merge both versions
+
+### Repo structure changes
+- Remote added Sentry (`@sentry/nextjs`), calendar overhaul, GA4 persistence, Paddle portal/cancel, robots.txt/sitemap
+- Route count grew from 43 → 67 after merge
+- `outreach` and `brand-voice` features removed in remote's force-push (no longer in sidebar or features.ts)
+
 ### API Keys in Knowledge Graph
 - All 4 API tokens stored in memory/knowledge graph (MCP memory server):
   - `neon-api-key`: Neon API management (`napi_...`)

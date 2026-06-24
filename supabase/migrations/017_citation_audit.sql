@@ -1,5 +1,3 @@
--- AI Citation Audit tables
-
 CREATE TABLE IF NOT EXISTS citation_audits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -16,15 +14,15 @@ CREATE TABLE IF NOT EXISTS citation_audits (
 
 ALTER TABLE citation_audits ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own citation audits"
+CREATE POLICY IF NOT EXISTS "Users can view own citation audits"
   ON citation_audits FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own citation audits"
+CREATE POLICY IF NOT EXISTS "Users can insert own citation audits"
   ON citation_audits FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own citation audits"
+CREATE POLICY IF NOT EXISTS "Users can update own citation audits"
   ON citation_audits FOR UPDATE
   USING (auth.uid() = user_id);
 
@@ -45,7 +43,7 @@ CREATE TABLE IF NOT EXISTS citation_results (
 
 ALTER TABLE citation_results ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own citation results"
+CREATE POLICY IF NOT EXISTS "Users can view own citation results"
   ON citation_results FOR SELECT
   USING (
     EXISTS (
@@ -55,6 +53,6 @@ CREATE POLICY "Users can view own citation results"
     )
   );
 
-CREATE POLICY "Service can insert citation results"
+CREATE POLICY IF NOT EXISTS "Service can insert citation results"
   ON citation_results FOR INSERT
   WITH CHECK (true);
