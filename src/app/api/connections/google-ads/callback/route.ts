@@ -40,12 +40,31 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login`)
   }
 
+  // Fetch customer ID from Google Ads API
+  let customerId = ""
+  try {
+    const custResponse = await fetch(
+      "https://googleads.googleapis.com/v18/customers:listAccessibleCustomers",
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+    )
+    if (custResponse.ok) {
+      const custData = await custResponse.json()
+      const ids = custData.resourceNames || []
+      if (ids.length > 0) {
+        customerId = ids[0].replace("customers/", "")
+      }
+    }
+  } catch {
+    // non-critical, will show error in analytics hub
+  }
+
   await supabase.from("data_connections").insert({
     user_id: user.id,
     provider: "google_ads",
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
-    provider_account_name: "Google Ads",
+    provider_account_id: customerId,
+    provider_account_name: customerId ? `Google Ads (${customerId})` : "Google Ads",
     expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
   })
 

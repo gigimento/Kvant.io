@@ -42,15 +42,27 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login`)
   }
 
-  const accountResponse = await fetch(
-    "https://analyticsadmin.googleapis.com/v1beta/accountSummaries",
-    { headers: { Authorization: `Bearer ${tokens.access_token}` } }
-  )
-  const accounts = await accountResponse.json()
-
-  const firstProperty = accounts.accountSummaries?.[0]?.propertySummaries?.[0]
-  const propertyId = firstProperty?.property?.replace("properties/", "") || ""
-  const propertyName = firstProperty?.displayName || "GA4 Account"
+  let propertyId = ""
+  let propertyName = "GA4 Account"
+  try {
+    const accountResponse = await fetch(
+      "https://analyticsadmin.googleapis.com/v1beta/accountSummaries",
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+    )
+    if (accountResponse.ok) {
+      const accounts = await accountResponse.json()
+      const summaries = accounts.accountSummaries || []
+      if (summaries.length > 0) {
+        const props = summaries[0].propertySummaries || []
+        if (props.length > 0) {
+          propertyId = (props[0].property || "").replace("properties/", "")
+          propertyName = props[0].displayName || "GA4 Account"
+        }
+      }
+    }
+  } catch {
+    // non-critical, propertyId stays empty
+  }
 
   await supabase.from("data_connections").insert({
     user_id: user.id,
