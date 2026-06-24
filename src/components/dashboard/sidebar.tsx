@@ -10,6 +10,7 @@ import { useState, useEffect } from "react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/analytics", label: "Analytics Hub", icon: TrendingUp },
   { href: "/dashboard/reports", label: "Narrative Reports", icon: FileText },
   { href: "/dashboard/seo", label: "Brand Radar", icon: Search },
   { href: "/dashboard/competitive", label: "Competitive Dashboard", icon: BarChart3 },
@@ -18,7 +19,6 @@ const navItems = [
   { href: "/dashboard/content-calendar", label: "Content Calendar", icon: Calendar },
   { href: "/dashboard/invoices", label: "Invoices", icon: Receipt },
   { href: "/dashboard/proposals", label: "Proposals", icon: Presentation },
-  { href: "/dashboard/analytics", label: "Analytics Hub", icon: TrendingUp },
   { href: "/dashboard/client-portal", label: "Client Portal", icon: Users },
   { href: "/dashboard/scheduled-reports", label: "Scheduled Reports", icon: Mail },
   { href: "/dashboard/citation-audit", label: "AI Citation Audit", icon: ScanLine },
@@ -113,15 +113,12 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={onClose}
         />
       )}
-
-      {/* Mobile sidebar (overlay) */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 bg-primary/95 border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
@@ -130,8 +127,6 @@ export function Sidebar({
       >
         {sidebarContent}
       </aside>
-
-      {/* Desktop sidebar (always visible) */}
       <aside className="hidden md:flex md:w-64 flex-col border-r border-border bg-primary/50">
         {sidebarContent}
       </aside>

@@ -286,9 +286,39 @@ When switching providers, libraries, or making any cross-cutting change:
 - Here-strings require content on new line after `@'`
 - `Add-Content` appends to files, `Set-Content` writes
 
-### Claude Desktop MCP Config (2026-06-21 update)
-- Location: `C:\Users\Igor\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`
-- **16 MCP servers** configured: memory, mermaid, fetch, git, sql, neondb, sentry, wikis, desktop-projects, duckduckgo, sequential-thinking, excel, obsidian, ppt, supabase, vercel
+## STRICT: Thinking Mode — Stop Overgenerating
+
+**Problem:** AI često na jedan jednostavan prompt odgovara sa 10-sekcijskom analizom, tabelama, ocenama, roadmap-om, akcionim planom — iako niko to nije tražio.
+
+**Pravila koja AI MORA da poštuje:**
+
+### 1. Scope restrikcija
+- Odgovori SAMO na ono što je direktno traženo. Ni reč više.
+- Ako korisnik pita "analiziraj X" → daj analizu, NE akcioni plan, NE roadmap, NE preporuke, NE ocene sa zvezdicama, NE tabelu "pre/posle".
+- Ako korisnik pita "šta fali?" → nabroj samo šta fali. Ne dodaj kako da se popravi, ne predlaži prioritete, ne pravi timeline.
+
+### 2. Zabranjene kategorije (osim ako eksplicitno tražene)
+- Akcioni planovi / Roadmap-e / Timeline-ovi
+- Tabele sa ocenama (⭐⭐⭐)
+- "Preporuke" van direktnog pitanja
+- "Šta je odlično" sekcije kad je pitanje o problemima
+- Tabele "Pre vs Posle"
+- Bilo kakav format koji nije odgovor na postavljeno pitanje
+
+### 3. Ako nisi siguran šta treba da uradiš — pitaj
+- "Hoćeš samo analizu ili i preporuke?"
+- "Da li da napišem i akcioni plan?"
+- Ne pretpostavljaj. Pitaj.
+
+### 4. Pravilo jednog pasusa
+- Ako nisi siguran koliko je detaljno potrebno, ograniži se na 1-3 pasusa.
+- Korisnik će tražiti više ako mu treba.
+
+### 5. Nijedna analiza ne sme sadržati
+- "Zaključak" sekciju osim ako je eksplicitno tražena
+- Numeričke ocene (8/10, ⭐⭐⭐⭐)
+- Listu "sledećih koraka" osim ako je tražena
+- Bilo kakav action item koji korisnik nije tražio
 - **Wiki paths fixed**: SMT wikis must use `_SMT` prefix — `C:\Users\Igor\Desktop\_SMT\SMT Command Centar\wikis\smt-engineering` (NOT `C:\Users\Igor\Desktop\SMT Command Centar\...`)
 - **Broken sql-server removed**: old `C:\mcp-sql\server.py` didn't exist. Replaced with working `sql` MCP (Python, `asyncpg`, read-only SELECT queries via DATABASE_URL env var) and `neondb` MCP (Neon API management via httpx)
 - **Sentry MCP**: `@sentry/mcp-server` npm package, needs `SENTRY_AUTH_TOKEN` env var

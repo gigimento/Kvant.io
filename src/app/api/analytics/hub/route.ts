@@ -1,175 +1,132 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { fetchGA4Metrics } from '@/lib/api/ga4';
-import { getMetaAdsInsights } from '@/lib/api/meta-ads';
-import { getGoogleAdsClient } from '@/lib/api/google-ads';
+import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import { fetchGA4Metrics } from "@/lib/api/ga4"
+import { getGoogleAdsClient } from "@/lib/api/google-ads"
+import { getMetaAdsInsights } from "@/lib/api/meta-ads"
+import { refreshAccessToken } from "@/lib/api/ga4"
 
-async function refreshGoogleToken(refreshToken: string): Promise<{ access_token: string; expires_in: number }> {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  });
-  if (!res.ok) throw new Error('Google token refresh failed');
-  return res.json();
-}
-
-/** Distribute a total across 7 days with realistic weekday variation */
-function distributeToSparklines(total: number, days = 7): number[] {
-  // Weighted: weekdays get slightly more traffic, weekend less
-  const weights = [0.12, 0.13, 0.14, 0.16, 0.17, 0.15, 0.13];
-  // If less than 7 days of data, scale proportionally
-  return weights.map((w) => Math.round(total * w));
-}
-
-function getPeriodDates(period: string) {
-  const now = new Date();
-  let periodStart: Date;
-  let prevStart: Date;
-  let prevEnd: Date;
-
-  switch (period) {
-    case 'last_month': {
-      periodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      prevStart = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-      prevEnd = new Date(now.getFullYear(), now.getMonth() - 1, 0);
-      break;
-    }
-    case 'last_90_days': {
-      periodStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      prevStart = new Date(periodStart.getTime() - 90 * 24 * 60 * 60 * 1000);
-      prevEnd = new Date(periodStart.getTime() - 1);
-      break;
-    }
-    default: {
-      // this_month (month-to-date)
-      periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      prevEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-      break;
-    }
-  }
-
-  const periodEnd = period === 'last_90_days' ? now : new Date(Math.min(now.getTime(), new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 0).getTime()));
-
-  return {
-    periodStart: periodStart.toISOString().split('T')[0],
-    periodEnd: periodEnd.toISOString().split('T')[0],
-    prevStart: prevStart.toISOString().split('T')[0],
-    prevEnd: prevEnd.toISOString().split('T')[0],
-  };
-}
-
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'this_month';
-
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     const { data: connections } = await supabase
-      .from('data_connections')
-      .select('*')
-      .eq('user_id', user.id);
+      .from("data_connections")
+      .select("*")
+      .eq("user_id", user.id)
 
-    if (!connections || connections.length === 0) {
-      return NextResponse.json({ hasConnections: false, sources: [], message: 'No data connections found' });
+    if (!connections?.length) {
+      return NextResponse.json({ analytics: null, googleAds: null, metaAds: null })
     }
 
-    const dates = getPeriodDates(period);
+    const result: any = { analytics: null, googleAds: null, metaAds: null }
 
-    const results: Record<string, any> = {};
-    const errors: Record<string, string> = {};
-
-    for (const conn of connections) {
+    const ga4Conn = connections.find(c => c.provider === "ga4" && c.is_valid)
+    if (ga4Conn) {
       try {
-        if (conn.provider === 'ga4' && conn.access_token) {
-          let token = conn.access_token;
-          let newExpiresAt = conn.expires_at;
-          if (new Date(conn.expires_at) < new Date() && conn.refresh_token) {
-            const refreshed = await refreshGoogleToken(conn.refresh_token);
-            token = refreshed.access_token;
-            newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
-            await supabase.from('data_connections').update({ access_token: token, expires_at: newExpiresAt }).eq('id', conn.id);
-          }
-          const metrics = await fetchGA4Metrics(token, conn.refresh_token || '', conn.provider_account_id || '', newExpiresAt, dates.periodStart, dates.periodEnd, dates.prevStart, dates.prevEnd);
-          results.ga4 = {
-            sessions: metrics.sessions,
-            users: metrics.users,
-            pageviews: metrics.pageviews,
-            bounceRate: metrics.bounceRate,
-            avgSessionDuration: metrics.avgSessionDuration,
-            sessionsChange: metrics.sessionsChange,
-            usersChange: metrics.usersChange,
-            topPages: metrics.topPages,
-            sessionsBySource: metrics.sessionsBySource,
-            sparklines: {
-              sessions: distributeToSparklines(metrics.sessions),
-              users: distributeToSparklines(metrics.users),
-              pageviews: distributeToSparklines(metrics.pageviews),
-            },
-          };
+        const periodEnd = new Date()
+        const periodStart = new Date()
+        periodStart.setDate(periodStart.getDate() - 30)
+        const prevEnd = new Date(periodStart.getTime() - 86400000)
+        const prevStart = new Date(prevEnd)
+        prevStart.setDate(prevStart.getDate() - 30)
+        const fmt = (d: Date) => d.toISOString().split("T")[0]
+
+        const metrics = await fetchGA4Metrics(
+          ga4Conn.access_token,
+          ga4Conn.refresh_token,
+          ga4Conn.provider_account_id,
+          ga4Conn.expires_at,
+          fmt(periodStart),
+          fmt(periodEnd),
+          fmt(prevStart),
+          fmt(prevEnd),
+        )
+
+        if (metrics.refreshedToken && metrics.newExpiresAt) {
+          await supabase.from("data_connections").update({
+            access_token: metrics.refreshedToken,
+            expires_at: metrics.newExpiresAt,
+          }).eq("id", ga4Conn.id)
         }
 
-        if (conn.provider === 'meta_ads' && conn.access_token) {
-          const insights = await getMetaAdsInsights(conn.access_token, conn.provider_account_id || '');
-          const data = insights.data?.[0] || {};
-          const spend = parseFloat(data.spend || '0');
-          results.meta_ads = {
-            impressions: parseInt(data.impressions || '0'),
-            clicks: parseInt(data.clicks || '0'),
-            spend: spend,
-            reach: parseInt(data.reach || '0'),
-            ctr: parseFloat(data.ctr || '0'),
-            cpc: parseFloat(data.cpc || '0'),
-            sparklines: {
-              spend: distributeToSparklines(Math.round(spend * 100) / 100),
-            },
-          };
+        result.analytics = {
+          sessions: metrics.sessions,
+          users: metrics.users,
+          pageviews: metrics.pageviews,
+          bounceRate: metrics.bounceRate,
+          avgSessionDuration: metrics.avgSessionDuration,
+          sessionsChange: metrics.sessionsChange,
+          usersChange: metrics.usersChange,
+          topPages: metrics.topPages,
+          sessionsBySource: metrics.sessionsBySource,
         }
-
-        if (conn.provider === 'google_ads' && conn.access_token) {
-          let token = conn.access_token;
-          if (new Date(conn.expires_at) < new Date() && conn.refresh_token) {
-            const refreshed = await refreshGoogleToken(conn.refresh_token);
-            token = refreshed.access_token;
-            await supabase.from('data_connections').update({ access_token: token, expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() }).eq('id', conn.id);
-          }
-          const campaigns = await getGoogleAdsClient(token, conn.provider_account_id || '');
-          const campaignList = (campaigns.results || []).map((c: any) => ({
-            id: c.campaign?.id,
-            name: c.campaign?.name,
-            impressions: parseInt(c.metrics?.impressions || '0'),
-            clicks: parseInt(c.metrics?.clicks || '0'),
-            cost: Math.round(parseInt(c.metrics?.cost_micros || '0') / 1000000) / 100,
-            conversions: parseFloat(c.metrics?.conversions || '0'),
-          }));
-          const totalCost = campaignList.reduce((s: number, c: any) => s + c.cost, 0);
-          results.google_ads = {
-            campaigns: campaignList,
-            totalImpressions: campaignList.reduce((s: number, c: any) => s + c.impressions, 0),
-            totalClicks: campaignList.reduce((s: number, c: any) => s + c.clicks, 0),
-            totalCost: totalCost,
-            totalConversions: campaignList.reduce((s: number, c: any) => s + c.conversions, 0),
-            sparklines: {
-              cost: distributeToSparklines(Math.round(totalCost * 100) / 100),
-            },
-          };
-        }
-      } catch (e: any) {
-        errors[conn.provider] = e.message;
+      } catch (err) {
+        console.warn("GA4 fetch failed in analytics hub:", err)
       }
     }
 
-    return NextResponse.json({ hasConnections: true, sources: results, hasErrors: Object.keys(errors).length > 0, errors: Object.keys(errors).length > 0 ? errors : undefined });
+    const adsConn = connections.find(c => c.provider === "google_ads" && c.is_valid)
+    if (adsConn) {
+      try {
+        let token = adsConn.access_token
+        if (new Date(adsConn.expires_at) < new Date()) {
+          const refreshed = await refreshAccessToken(adsConn.refresh_token)
+          token = refreshed.access_token
+          await supabase.from("data_connections").update({
+            access_token: refreshed.access_token,
+            expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+          }).eq("id", adsConn.id)
+        }
+
+        const adsData = await getGoogleAdsClient(token, adsConn.provider_account_id)
+        const campaigns = adsData?.results || []
+        result.googleAds = {
+          campaigns: campaigns.map((r: any) => ({
+            id: r.campaign?.id,
+            name: r.campaign?.name,
+            impressions: parseInt(r.metrics?.impressions || "0"),
+            clicks: parseInt(r.metrics?.clicks || "0"),
+            cost: Math.round(parseInt(r.metrics?.cost_micros || "0") / 10000) / 100,
+            conversions: parseFloat(r.metrics?.conversions || "0"),
+          })),
+          totalImpressions: campaigns.reduce((s: number, r: any) => s + parseInt(r.metrics?.impressions || "0"), 0),
+          totalClicks: campaigns.reduce((s: number, r: any) => s + parseInt(r.metrics?.clicks || "0"), 0),
+          totalCost: campaigns.reduce((s: number, r: any) => s + Math.round(parseInt(r.metrics?.cost_micros || "0") / 10000) / 100, 0),
+          totalConversions: campaigns.reduce((s: number, r: any) => s + parseFloat(r.metrics?.conversions || "0"), 0),
+        }
+      } catch (err) {
+        console.warn("Google Ads fetch failed in analytics hub:", err)
+      }
+    }
+
+    const metaConn = connections.find(c => c.provider === "meta_ads" && c.is_valid)
+    if (metaConn) {
+      try {
+        const metaData = await getMetaAdsInsights(metaConn.access_token, metaConn.provider_account_id)
+        const dataArr = metaData?.data || []
+        result.metaAds = {
+          impressions: dataArr.reduce((s: number, d: any) => s + parseInt(d.impressions || "0"), 0),
+          clicks: dataArr.reduce((s: number, d: any) => s + parseInt(d.clicks || "0"), 0),
+          spend: dataArr.reduce((s: number, d: any) => s + parseFloat(d.spend || "0"), 0),
+          reach: dataArr.reduce((s: number, d: any) => s + parseInt(d.reach || "0"), 0),
+          ctr: dataArr.length > 0
+            ? dataArr.reduce((s: number, d: any) => s + parseFloat(d.ctr || "0"), 0) / dataArr.length
+            : 0,
+          cpc: dataArr.length > 0
+            ? dataArr.reduce((s: number, d: any) => s + parseFloat(d.cpc || "0"), 0) / dataArr.length
+            : 0,
+        }
+      } catch (err) {
+        console.warn("Meta Ads fetch failed in analytics hub:", err)
+      }
+    }
+
+    return NextResponse.json(result)
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

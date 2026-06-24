@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { askLLMWithSystem } from "@/lib/llm/client"
 import { buildNarrativePrompt } from "@/lib/llm/prompts/narrative"
 import { fetchGA4Metrics } from "@/lib/api/ga4"
+import { sendReportEmail } from "@/lib/email/send-report"
 
 async function fetchMetricsForConfig(supabase: any, config: any) {
   const dataSources: string[] = config.data_sources || []
@@ -112,6 +114,20 @@ export async function GET(request: Request) {
     }
 
     const prompt = buildNarrativePrompt(reportData)
+    let narrativeText = ""
+    let status = "ready"
+
+    try {
+      const llmResponse = await askLLMWithSystem(
+        "You are a senior marketing analyst writing client reports. Write in clear, professional English. Be specific and data-driven.",
+        prompt,
+        "quality"
+      )
+      narrativeText = llmResponse.content
+    } catch (err) {
+      console.warn("LLM generation failed for config", config.id, err)
+      status = "failed"
+    }
 
     const { data: report } = await supabase
       .from("reports")
@@ -123,12 +139,25 @@ export async function GET(request: Request) {
         period_end: reportData.periodEnd,
         raw_data: reportData,
         narrative_prompt: prompt,
-        status: "pending",
+        narrative_text: narrativeText,
+        status,
       })
       .select()
       .single()
 
     if (!report) continue
+
+    if (config.recipients && config.recipients.length > 0 && narrativeText) {
+      sendReportEmail(config.recipients, {
+        id: report.id,
+        client_name: config.client_name,
+        period_start: report.period_start,
+        period_end: report.period_end,
+        narrative_text: narrativeText,
+        raw_data: reportData,
+        created_at: report.created_at,
+      })
+    }
 
     const nextRun = new Date()
     if (config.schedule === "weekly") {
@@ -139,14 +168,6 @@ export async function GET(request: Request) {
     await supabase.from("report_configs").update({
       next_run_at: nextRun.toISOString(),
     }).eq("id", config.id)
-
-    const origin = request.headers.get("origin") || request.headers.get("host") || "localhost:3000"
-    const baseUrl = origin.startsWith("http") ? origin : `https://${origin}`
-    fetch(`${baseUrl}/api/reports/process-single`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reportId: report.id }),
-    }).catch(() => {})
 
     dispatched++
   }
