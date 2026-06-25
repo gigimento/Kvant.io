@@ -24,14 +24,14 @@ import {
 } from "lucide-react"
 
 const ALL_FEATURES_MARKETING = [
-  { name: "Narrative Reports", description: "AI-generated client reports from your analytics data", icon: FileText, price: "$9" },
-  { name: "Brand Radar", description: "Monitor brand mentions across every major LLM", icon: Search, price: "$9" },
-  { name: "Competitive Dashboard", description: "Track competitors and market positioning over time", icon: BarChart3, price: "$9" },
-  { name: "Content Briefs", description: "Generate SEO-optimized content briefs in seconds", icon: FileEdit, price: "$9" },
-  { name: "Content Calendar", description: "Plan and schedule your content publishing", icon: Calendar, price: "$9" },
-  { name: "Invoices", description: "Create and manage professional client invoices", icon: Receipt, price: "$9" },
-  { name: "Proposals", description: "AI-powered proposal generation that wins bids", icon: Presentation, price: "$9" },
-  { name: "Branding", description: "Custom brand colors and settings across all tools", icon: Palette, price: "$3" },
+  { name: "Narrative Reports", description: "AI-generated client reports from your analytics data", icon: FileText, price: "$9", beta: false },
+  { name: "Brand Radar", description: "Monitor brand mentions across every major LLM", icon: Search, price: "$9", beta: false },
+  { name: "Competitive Dashboard", description: "Track competitors and market positioning over time", icon: BarChart3, price: "$9", beta: true },
+  { name: "Content Briefs", description: "Generate SEO-optimized content briefs in seconds", icon: FileEdit, price: "$9", beta: true },
+  { name: "Content Calendar", description: "Plan and schedule your content publishing", icon: Calendar, price: "$9", beta: true },
+  { name: "Invoices", description: "Create and manage professional client invoices", icon: Receipt, price: "$9", beta: false },
+  { name: "Proposals", description: "AI-powered proposal generation that wins bids", icon: Presentation, price: "$9", beta: false },
+  { name: "Branding", description: "Custom brand colors and settings across all tools", icon: Palette, price: "$3", beta: false },
 ]
 
 const tiers = [
@@ -90,7 +90,7 @@ export default function MarketingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,165,190,0.06),transparent_50%)]" />
         <div className="mx-auto max-w-7xl px-6 text-center relative">
           <Badge variant="secondary" className="mb-6">
-            8 tools, one platform — pay for what you use
+            Beta — 8 tools, one platform — pay for what you use
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
             Your agency toolkit,{" "}
@@ -133,7 +133,10 @@ export default function MarketingPage() {
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
                     <Icon className="h-5 w-5 text-accent" />
                   </div>
-                  <h3 className="font-semibold">{f.name}</h3>
+                  <h3 className="font-semibold">
+                    {f.name}
+                    {f.beta && <span className="ml-2 rounded bg-accent/20 px-1.5 py-0.5 text-xs text-accent">Beta</span>}
+                  </h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
                   <p className="mt-4 text-sm"><span className="text-lg font-bold">{f.price}</span><span className="text-muted-foreground">/mo</span></p>
                 </div>
@@ -149,7 +152,7 @@ export default function MarketingPage() {
           <div className="text-center">
             <h2 className="text-3xl font-bold">Simple per-tool pricing</h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Every tool is $9/mo individually. The more you pick, the less you pay.
+              Beta pricing — locked in forever for early users. Every tool is $9/mo individually.
             </p>
           </div>
           <div className="mt-16 grid gap-6 md:grid-cols-4">
