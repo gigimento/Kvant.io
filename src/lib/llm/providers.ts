@@ -1,4 +1,5 @@
 export type LLMProvider = 'chatgpt' | 'claude' | 'gemini' | 'perplexity';
+export type LLMModel = 'fast' | 'quality';
 
 export interface LLMResponse {
   content: string;
@@ -9,6 +10,11 @@ export interface LLMResponse {
     total_tokens: number;
   };
 }
+
+const GEMINI_MODELS: Record<LLMModel, string> = {
+  fast: 'gemini-3.1-flash-lite',
+  quality: 'gemini-3.1-flash-001',
+};
 
 async function fetchWithRetry(
   url: string,
@@ -206,6 +212,44 @@ export const PROVIDER_CONFIG_KEY: Record<LLMProvider, string> = {
   gemini: 'google_ai_api_key',
   perplexity: 'perplexity_api_key',
 };
+
+async function callGeminiFromEnv(prompt: string, model: string): Promise<LLMResponse> {
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!apiKey) throw new Error('GOOGLE_AI_API_KEY not set');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const response = await fetchWithRetry(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 4096, temperature: 0.7 },
+    }),
+  });
+
+  const data = await response.json();
+  return {
+    content: data.candidates?.[0]?.content?.parts?.[0]?.text ?? '',
+    model: data.modelVersion ?? model,
+    usage: {
+      prompt_tokens: data.usageMetadata?.promptTokenCount ?? 0,
+      completion_tokens: data.usageMetadata?.candidatesTokenCount ?? 0,
+      total_tokens: data.usageMetadata?.totalTokenCount ?? 0,
+    },
+  };
+}
+
+export async function askLLM(prompt: string, model: LLMModel = 'fast'): Promise<LLMResponse> {
+  return callGeminiFromEnv(prompt, GEMINI_MODELS[model]);
+}
+
+export async function askLLMWithSystem(
+  systemPrompt: string,
+  userPrompt: string,
+  model: LLMModel = 'fast',
+): Promise<LLMResponse> {
+  return callGeminiFromEnv(`${systemPrompt}\n\n${userPrompt}`, GEMINI_MODELS[model]);
+}
 
 export async function callProvider(
   provider: LLMProvider,
