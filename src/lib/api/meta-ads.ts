@@ -10,7 +10,7 @@ export async function getMetaAdsClient(
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      method: "POST",
+      method: "GET",
     }
   )
 
