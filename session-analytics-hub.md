@@ -1,7 +1,7 @@
 # Session Handoff — Analytics Hub + Email Delivery
 
 **Datum:** 24. jun 2026.
-**Commit:** (posle push-a)
+**Commit:** `a08a5b3`
 
 ---
 

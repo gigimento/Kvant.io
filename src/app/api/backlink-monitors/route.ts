@@ -20,7 +20,6 @@ export async function POST(request: Request) {
   }
   const { data, error } = await supabase.from('backlink_monitors').insert({
     user_id: user.id, target_url, referring_domain, page_title: page_title || '', link_type: link_type || 'dofollow',
-    domain_authority: Math.floor(Math.random() * 60) + 10,
   }).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
