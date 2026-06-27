@@ -81,23 +81,23 @@ export function ContentCalendar() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1 rounded-lg border border-border p-1">
           <button onClick={() => setView("calendar")}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === "calendar" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"}`}>
-            <Calendar className="h-4 w-4" /> Calendar
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === "calendar" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"}`}>
+            <Calendar className="h-4 w-4" /> <span className="hidden xs:inline">Calendar</span>
           </button>
           <button onClick={() => setView("kanban")}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === "kanban" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"}`}>
-            <Columns3 className="h-4 w-4" /> Kanban
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${view === "kanban" ? "bg-accent text-white" : "text-muted-foreground hover:text-white"}`}>
+            <Columns3 className="h-4 w-4" /> <span className="hidden xs:inline">Kanban</span>
           </button>
         </div>
         {view === "calendar" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button onClick={prevMonth} className="rounded-lg p-1.5 text-muted-foreground hover:text-white"><ChevronLeft className="h-4 w-4" /></button>
-            <span className="text-sm font-medium min-w-[140px] text-center">{currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span className="text-sm font-medium min-w-[120px] sm:min-w-[140px] text-center">{currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
             <button onClick={nextMonth} className="rounded-lg p-1.5 text-muted-foreground hover:text-white"><ChevronRight className="h-4 w-4" /></button>
-            <button onClick={goToday} className="ml-2 rounded-lg border border-border px-3 py-1 text-xs text-muted-foreground hover:text-white">Today</button>
+            <button onClick={goToday} className="ml-1 sm:ml-2 rounded-lg border border-border px-2 sm:px-3 py-1 text-xs text-muted-foreground hover:text-white">Today</button>
           </div>
         )}
       </div>

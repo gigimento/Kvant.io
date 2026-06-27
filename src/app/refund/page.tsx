@@ -1,4 +1,10 @@
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Refund Policy — Kvant",
+  description: "Kvant refund policy. 14-day money-back guarantee for all plans.",
+}
 
 export default function RefundPage() {
   return (

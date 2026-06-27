@@ -39,7 +39,8 @@ export function KanbanView({ entries, onEntryClick, onStatusChange }: KanbanView
   }
 
   return (
-    <div className="grid grid-cols-5 gap-4 min-h-[60vh]">
+    <div className="overflow-x-auto pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 min-h-[60vh] min-w-[600px]">
       {COLUMNS.map(col => {
         const colEntries = entries.filter(e => e.status === col.key)
         return (
@@ -66,6 +67,7 @@ export function KanbanView({ entries, onEntryClick, onStatusChange }: KanbanView
           </div>
         )
       })}
+    </div>
     </div>
   )
 }

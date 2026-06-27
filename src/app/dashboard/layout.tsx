@@ -17,7 +17,7 @@ export default function DashboardLayout({
 
   return (
     <ToastProvider>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-dvh overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main className="flex-1 overflow-y-auto bg-primary">
           <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-primary/80 backdrop-blur-sm px-4 md:px-8 py-3 md:hidden">

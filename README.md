@@ -1,128 +1,119 @@
-# Kvant — AI-Powered Agency Suite
+# Kvant — AI-Powered Agency Toolkit
 
-> Two SaaS products in one platform: **Narrative Reports** + **Brand Radar**, plus a full toolkit for modern marketing agencies.
-
-Kvant is a production-ready Next.js SaaS for marketing agencies that want to deliver AI-generated client reports, monitor brand visibility across LLMs, manage content pipelines, and streamline operations — all under one roof.
-
-## Features
-
-### Narrative Reports
-- AI-generated monthly reports with plain-English storytelling (powered by Google Gemini)
-- Connect GA4, Google Ads, and Meta Ads for automated data ingestion
-- Branded PDF exports with custom colors and logo
-- Client-facing share links with public access
-- Weekly email delivery via cron
-
-### Brand Radar
-- Monitor how AI models (Gemini, ChatGPT, Claude) mention your brand and competitors
-- Automated daily scans via Vercel cron
-- Sentiment analysis (positive / neutral / negative)
-- Competitive share-of-voice dashboard with interactive charts
-
-### Agency Toolkit
-- **Content Briefs** — AI-generated SEO briefs with outline, key points, and FAQ ideas
-- **Content Calendar** — Drag-and-drop calendar to plan and schedule posts
-- **Invoices** — Create, manage, and download invoices as PDF
-- **Client Proposals** — AI-powered proposal generator with executive summary and pricing
-- **Branding Settings** — Customize colors and logo for client-facing materials
-
-### Business
-- 14-day free trial with Paddle subscriptions ($29/mo or $290/yr)
-- Secure auth via Supabase (email/password)
-- Onboarding flow with profile and feature selection
-- Vercel cron for automated report generation and brand scanning
-- Subscription gating with trial period
+17 AI-native tools for marketing agencies: narrative client reports, brand monitoring across LLMs, competitive analysis, content calendar, invoices, proposals, and more.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16.2 (App Router, Turbopack) |
-| Styling | Tailwind CSS v4 |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (SSR) |
-| AI | Google Gemini 3.1 Flash Lite (free tier) |
-| Payments | Paddle (subscriptions + trials) |
-| Hosting | Vercel (Edge + Serverless) |
-| Email | Resend (transactional) |
-| Charts | Recharts |
-| PDF | @react-pdf/renderer |
-| Icons | Lucide React |
+- **Next.js 16** (App Router, Turbopack)
+- **Tailwind CSS v4**
+- **Supabase** (Auth + PostgreSQL)
+- **Google Gemini** (all LLM calls, 60 req/min free tier)
+- **Paddle** (payments, 14-day trial)
+- **Vercel** (hosting)
+- **Resend** (transactional email)
 
 ## Getting Started
 
 ```bash
-npm install
-cp .env.local.example .env.local   # fill in your keys
+# Install
+npm ci
+
+# Copy env vars
+cp .env.example .env.local
+# Fill in: Supabase URL/keys, Paddle API key, Google Gemini key, Resend API key
+
+# Dev
 npm run dev
+
+# Build
+npm run build
+
+# Tests
+npm test              # Unit tests (Vitest)
+npm run test:e2e      # E2E tests (Playwright)
+npm run test:api      # API route integration tests
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Environment Variables
-
-See `.env.local.example` for the full list. Required vars:
-- `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
-- `GOOGLE_AI_API_KEY` — Google AI Studio (free tier)
-- `PADDLE_API_KEY` — Paddle for payments
-
-## Deployment
-
-Push to GitHub → Vercel auto-deploys. Add all env vars in Vercel Dashboard → Settings → Environment Variables.
-
-```bash
-vercel --prod
-```
-
-## Database
-
-Supabase migrations live in `supabase/migrations/`. Run them via the Supabase Dashboard SQL editor or Management API.
-
-```
-001_schema.sql       → Base tables (profiles, reports, brand_monitors, etc.)
-002_soft_delete.sql  → Soft delete for reports
-003_onboarding_paddle.sql → Paddle subscriptions + onboarding
-004_trial.sql        → 14-day trial period
-005_features.sql     → Share links, brand settings
-006_public_share_rls.sql → RLS for public shares
-007_content_calendar.sql  → Calendar entries
-008_invoices.sql     → Invoice table
-009_service_config.sql   → Server-side service config
-```
-
-## Architecture
+## Project Structure
 
 ```
 src/
-├── app/
-│   ├── page.tsx                # Landing page
-│   ├── proxy.ts                # Request interception (Next.js 16)
-│   ├── login/ + register/      # Auth pages
-│   ├── onboarding/             # 2-step onboarding flow
-│   ├── dashboard/              # 12 feature modules
-│   └── api/                    # 20+ API routes
-├── components/
-│   ├── ui/                     # Reusable UI primitives
-│   ├── dashboard/              # Sidebar, OnboardingGuard
-│   └── calendar/               # Drag-and-drop calendar grid
-└── lib/
-    ├── supabase/               # Client, server, admin helpers
-    ├── llm/                    # Gemini client + prompt builders
-    ├── paddle/                 # Paddle API wrapper
-    └── email/                  # Resend templates
+  app/
+    page.tsx                   # Landing page
+    layout.tsx                 # Root layout (metadata, JSON-LD)
+    login, register, onboarding, terms, privacy, refund
+    dashboard/
+      layout.tsx               # Sidebar + auth guard
+      page.tsx                 # Stats overview
+      reports/, seo/, competitive/, content-briefs/,
+      content-calendar/, invoices/, proposals/,
+      subscriptions/, settings/, connections/,
+      analytics/, keyword-rankings/, backlinks/,
+      citation-audit/, aeo/, agentic/,
+      client-portal/, referrals/, scheduled-reports/
+    api/
+      paddle/                  # Paddle checkout, webhook, portal, cancel
+      connections/             # GA4, Google Ads, Meta Ads OAuth
+      cron/                    # Scheduled reports + brand scans
+      reports/, seo/, competitive/, content-briefs/,
+      content-calendar/, invoices/, proposals/,
+      branding/, email/
+  components/
+    ui/                        # Button, Card, Badge, etc.
+    dashboard/                 # Sidebar, SubscriptionGate, OnboardingGuard
+    calendar/                  # ContentCalendar, KanbanView, EntryForm
+  lib/
+    features.ts                # Tool definitions, tier pricing
+    subscription-guard.ts      # Server-side gating
+    supabase/                  # Client, server, admin, middleware
+    paddle/                    # Paddle API client
+    llm/                       # Gemini client + prompts
+    email/                     # Resend templates
 ```
 
-## Status
+## Pricing Model
 
-- ✅ 46 routes, 0 build errors
-- ✅ Auth + onboarding + subscription gating
-- ✅ Narrative Reports (GA4 / Google Ads / Meta Ads integrations)
-- ✅ Brand Radar (daily LLM scans + sentiment)
-- ✅ Content Briefs, Calendar, Invoices, Proposals
-- ✅ Paddle payments (14-day trial)
-- ✅ Vercel cron automation
-- ✅ Client share links + branded PDF exports
+3 tiers — Starter ($19/mo, 6 tools), Pro ($49/mo, 12 tools), Agency ($99/mo, 17 tools).
+Yearly billing: 2 months free (monthly × 10). 14-day free trial included.
 
----
+## Key Features
 
-Built for agencies that want AI-powered reporting without the enterprise price tag.
+- **Narrative Reports** — AI-generated client reports from analytics data
+- **Brand Radar** — Monitor brand mentions across ChatGPT, Claude, Gemini, Perplexity
+- **Competitive Dashboard** — LLM share-of-voice tracking
+- **Content Briefs** — SEO-optimized briefs with SERP analysis
+- **Content Calendar** — Drag-and-drop calendar + Kanban view
+- **Invoices** — PDF generation, client management
+- **Proposals** — AI-powered proposal generation
+- **Analytics Hub** — GA4 + Google Ads + Meta Ads unified view
+- **SEO Audit** — Technical SEO, keyword research, on-page analysis
+- **AI Citation Audit** — 80-prompt brand visibility scan
+- **AEO Foundations** — AI crawler optimization (llms.txt, robots.txt)
+- **Agentic Readiness** — WebMCP agent task completion scoring
+- **Client Portal** — White-label share dashboard
+- **Referrals** — Share-to-earn with click tracking
+- **Scheduled Reports** — Automated email delivery via cron
+
+## Tests
+
+```bash
+npm test                 # 37 unit tests (Vitest)
+npm run test:api         # API route integration tests
+npm run test:e2e         # 37 E2E tests (Playwright)
+npx playwright show-report  # View E2E report
+```
+
+## CI/CD
+
+GitHub Actions on push/PR: lint → build → unit tests → E2E tests.
+
+## Environment
+
+See `.env.example` for all required variables. Key ones:
+- `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_KEY`
+- `GOOGLE_AI_API_KEY`
+- `PADDLE_API_KEY` + `PADDLE_WEBHOOK_SECRET`
+- `RESEND_API_KEY`
+- `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` (GA4 OAuth)
+- `META_APP_ID` + `META_APP_SECRET` (Meta Ads OAuth)

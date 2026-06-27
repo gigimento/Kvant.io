@@ -1,4 +1,10 @@
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — Kvant",
+  description: "Kvant privacy policy. How we handle your data and what information we collect.",
+}
 
 export default function PrivacyPage() {
   return (

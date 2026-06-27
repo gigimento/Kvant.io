@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { paddle } from "@/lib/paddle/client"
-import { getPriceForSelection } from "@/lib/features"
+import { getPriceForTier, getFeaturesByTier, ALL_FEATURES, type TierSlug } from "@/lib/features"
 
 export async function POST(request: Request) {
   try {
-    const { features, plan } = await request.json()
-    if (!features || !Array.isArray(features) || features.length === 0 || !plan) {
-      return NextResponse.json({ error: "features (array) and plan required" }, { status: 400 })
+    const { tier, plan, features } = await request.json()
+    if (!tier || !["starter", "pro", "agency"].includes(tier) || !plan) {
+      return NextResponse.json({ error: "tier (starter|pro|agency) and plan required" }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -16,12 +16,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { priceId } = getPriceForSelection(features.length, plan)
+    const { priceId } = getPriceForTier(tier as TierSlug, plan)
 
     const transaction = await paddle.createTransaction(
       [{ priceId, quantity: 1 }],
       user.email,
-      { user_id: user.id, features: features.join(",") }
+      { user_id: user.id, tier }
     )
 
     const checkoutUrl = transaction.data?.urls?.checkout
@@ -30,9 +30,10 @@ export async function POST(request: Request) {
     }
 
     // Save features immediately so the user gets access even before webhook fires
+    const tierFeatures = getFeaturesByTier(tier as TierSlug).map((f) => f.slug)
     await supabase
       .from("profiles")
-      .update({ user_features: features })
+      .update({ user_features: features || tierFeatures })
       .eq("user_id", user.id)
 
     return NextResponse.json({

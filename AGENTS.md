@@ -139,25 +139,25 @@ supabase/migrations/
 | `NEON_API_KEY` | `.env.local` + DB | Neon Console |
 | `SENTRY_AUTH_TOKEN` | `.env.local` + DB | Sentry Account → Auth Tokens |
 
-## Session Status (June 21, 2026)
-- ✅ Build passes (49 routes, 0 errors)
+## Session Status (June 27, 2026)
+- ✅ Build passes (82 routes, 0 errors)
 - ✅ Auth + onboarding flow
-- ✅ 8 tools live: Reports, Brand Radar, Competitive, Content Briefs, Calendar, Invoices, Proposals, Branding
-- ✅ Per-feature subscription gating (server + client side)
-- ✅ "Build Your Own Plan" pricing: tiered (1=$9, 2-3=$15, 4-5=$22, 6-8=$29), monthly/yearly toggle
-- ✅ Plan builder UI on `/dashboard/subscriptions` with live calculator
-- ✅ 6 new Paddle tier prices created (tiers 1-3, monthly+yearly)
-- ✅ Landing page updated with tool grid + pricing tiers table
-- ✅ Paddle integration: products created, checkout API, webhook handler
+- ✅ 17 tools live (6 starter + 6 pro + 5 agency)
+- ✅ Per-feature subscription gating (server + client side) — FIXED
+- ✅ 3-tier pricing: Starter ($19), Pro ($49), Agency ($99), monthly/yearly
+- ✅ Paddle integration: products, checkout, webhook, customer portal, cancel
 - ✅ Vercel cron: Mon 6h reports, daily 7h brand scans
-- ✅ GA4 / Google Ads / Meta Ads OAuth infrastructure
+- ✅ GA4 / Google Ads OAuth infrastructure (API enabled, redirect URI added)
+- ✅ Supabase service key — FIXED (was wrong `sb_secret_...` format)
+- ✅ Supabase service_config — FIXED (updated in DB)
+- ✅ Vercel env vars — FIXED (SUPABASE_SERVICE_KEY updated)
+- ✅ Deploy on Vercel — DONE
 - ✅ Soft delete on reports
 - ✅ Legal pages (Terms, Privacy, Refund)
 - ✅ `proxy.ts` migration (was `middleware.ts`)
-- ❌ Paddle webhook secret not yet configured (needs setup in Paddle dashboard)
-- ❌ GA4/Ads integrations need Google Cloud + Meta App setup
-- ❌ Resend API key not configured
-- ❌ Customer portal URL not set up in Paddle
+- ❌ GA4 OAuth not yet reconnect-tested (user needs to reconnect)
+- ❌ Meta Ads — paused until Meta app is configured
+- ❌ Neon API unreachable (DNS issue)
 
 ## Hard Rule: Full Code Audit on Provider/Architecture Changes
 
@@ -328,6 +328,26 @@ When switching providers, libraries, or making any cross-cutting change:
 
 ## Workflow Preference (2026-06-22)
 - **Design-first approach**: For complex features, present a design in sections → user reviews and approves each section → write design doc → implement. This reduces rework and gives the user control over the architecture before code is written. User explicitly confirmed this as preferred workflow.
+
+## Session Learnings (2026-06-27)
+
+### Subscription guard fix
+- `checkServerAccess()` was stubbed to always return `{ allowed: true }`
+- Now checks: auth → trial_ends_at → subscriptions.plan/status → feature tier inheritance
+- Tier hierarchy: starter → pro (starter+pro) → agency (all)
+- `SubscriptionGate` client component now functional with "Upgrade to Access" CTA
+- Build passes with real guard (82 routes)
+
+### Supabase service key fix
+- `.env.local` had `sb_secret_W68Ov36jdJMzokIJY42r8Q_rS_i_XwP` — returns 401
+- Correct key from Management API: `eyJhbG...5nKbX370WSX53pJ0okWpckKrXqe4JXnSQXJfBk4pvM8`
+- Updated in: .env.local, service_config table, Vercel env
+- Service config also had different MGMT_TOKEN (sbp_5a30...) — kept as-is since it works
+
+### GA4 connection cleanup
+- Deleted stale data_connections (GA4, Google Ads) — expired tokens, empty account IDs
+- User enabled Analytics API and added redirect URI in Google Cloud Console
+- Need to reconnect via /dashboard/connections after deploy
 
 ## Session Learnings (2026-06-24)
 

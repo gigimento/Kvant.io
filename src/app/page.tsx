@@ -21,6 +21,7 @@ import {
   Receipt,
   Presentation,
   Palette,
+  Check,
 } from "lucide-react"
 
 const ALL_FEATURES_MARKETING = [
@@ -35,10 +36,9 @@ const ALL_FEATURES_MARKETING = [
 ]
 
 const tiers = [
-  { name: "Starter", count: "1 tool", price: "$9", yearly: "$90" },
-  { name: "Growth", count: "2–3 tools", price: "$15", yearly: "$150" },
-  { name: "Scale", count: "4–5 tools", price: "$22", yearly: "$220" },
-  { name: "All Access", count: "6–8 tools", price: "$29", yearly: "$290", badge: "Best Value" },
+  { name: "Starter", price: "$19", yearly: "$190", features: 6, badge: "" },
+  { name: "Pro", price: "$49", yearly: "$490", features: 12, badge: "Most Popular" },
+  { name: "Agency", price: "$99", yearly: "$990", features: 17, badge: "" },
 ]
 
 const benefits = [
@@ -90,7 +90,7 @@ export default function MarketingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,165,190,0.06),transparent_50%)]" />
         <div className="mx-auto max-w-7xl px-6 text-center relative">
           <Badge variant="secondary" className="mb-6">
-            Beta — 8 tools, one platform — pay for what you use
+            Beta — 17 AI-powered tools for agencies
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
             Your agency toolkit,{" "}
@@ -150,23 +150,29 @@ export default function MarketingPage() {
       <section id="pricing" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-6 relative">
           <div className="text-center">
-            <h2 className="text-3xl font-bold">Simple per-tool pricing</h2>
+            <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Beta pricing — locked in forever for early users. Every tool is $9/mo individually.
+              Pick only the tools you need. Beta pricing — locked in forever for early users.
             </p>
           </div>
-          <div className="mt-16 grid gap-6 md:grid-cols-4">
+          <div className="mt-8 flex justify-center">
+            <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 p-2 text-sm text-muted-foreground">
+              <Check className="h-4 w-4 text-accent" />
+              Mix and match from 17 AI-powered tools
+            </div>
+          </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
             {tiers.map((tier) => (
               <Card key={tier.name} className={tier.badge ? "border-accent/50 relative" : ""}>
                 {tier.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-white">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-white whitespace-nowrap">
                     {tier.badge}
                   </span>
                 )}
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold">{tier.name}</h3>
-                    <p className="text-sm text-muted-foreground">{tier.count}</p>
+                    <p className="text-sm text-muted-foreground">{tier.features} tools included</p>
                   </div>
                   <div>
                     <span className="text-3xl font-bold">{tier.price}</span>
@@ -174,7 +180,7 @@ export default function MarketingPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">or {tier.yearly}/yr (2 months free)</p>
                   <Button size="sm" className="w-full" asChild>
-                    <Link href={tier.count === "6–8 tools" ? "/register" : "/register"}>
+                    <Link href="/register">
                       Get Started <ArrowRight className="ml-1 h-3 w-3" />
                     </Link>
                   </Button>

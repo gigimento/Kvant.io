@@ -1,4 +1,10 @@
+import type { Metadata } from "next"
 import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Terms of Service — Kvant",
+  description: "Kvant terms of service for AI-powered agency toolkit users.",
+}
 
 export default function TermsPage() {
   return (

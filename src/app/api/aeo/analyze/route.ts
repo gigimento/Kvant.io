@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const { url, brand_name } = await request.json();
     if (!url) return NextResponse.json({ error: 'url is required' }, { status: 400 });
 
-    const access = await checkServerAccess('seo');
+    const access = await checkServerAccess('aeo');
     if (!access.allowed) return NextResponse.json({ error: access.reason || 'Subscription required' }, { status: 402 });
 
     const supabase = await createClient();

@@ -121,6 +121,12 @@ export default function OnboardingPage() {
       return
     }
     setSaving(false)
+    // Fire welcome email (async, don't block redirect)
+    fetch("/api/email/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email, name: fullName }),
+    }).catch(() => {})
     router.push("/dashboard")
     router.refresh()
   }
