@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { FileText, Search, Check, ArrowRight, Mail, } from "lucide-react"
+import { FileText, Search, Check, ArrowRight, Mail, Eye } from "lucide-react"
 
 const features = [
-  { id: "reports", label: "Narrative Reports", icon: FileText, desc: "AI-generated client reports with analytics data" },
-  { id: "seo", label: "Brand Radar", icon: Search, desc: "Track brand visibility across LLMs and search engines" },
+  { id: "brand-radar", label: "Brand Radar", icon: Search, desc: "Monitor how AI models talk about your clients' brands" },
+  { id: "geo-briefs", label: "GEO Briefs", icon: FileText, desc: "Actionable plans to improve AI visibility" },
+  { id: "pdf-audit", label: "PDF Audit", icon: Eye, desc: "Generate client-ready AI visibility audit reports" },
 ]
 
 const steps = [
@@ -30,7 +31,7 @@ export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState("")
   const [role, setRole] = useState("")
   const [error, setError] = useState("")
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(["brand-radar", "geo-briefs", "pdf-audit"])
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
   const [verificationSent, setVerificationSent] = useState(false)
 
