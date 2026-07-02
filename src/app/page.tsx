@@ -5,62 +5,75 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  FileText,
   Search,
   TrendingUp,
-  Users,
-  BarChart3,
   ArrowRight,
-  Sparkles,
-  Shield,
   Zap,
+  FileText,
   Eye,
-  MessageSquare,
-  FileEdit,
-  Calendar,
-  Receipt,
-  Presentation,
-  Palette,
-  Check,
+  ChevronDown,
 } from "lucide-react"
 
-const ALL_FEATURES_MARKETING = [
-  { name: "Narrative Reports", description: "AI-generated client reports from your analytics data", icon: FileText, price: "$9", beta: false },
-  { name: "Brand Radar", description: "Monitor brand mentions across every major LLM", icon: Search, price: "$9", beta: false },
-  { name: "Competitive Dashboard", description: "Track competitors and market positioning over time", icon: BarChart3, price: "$9", beta: true },
-  { name: "Content Briefs", description: "Generate SEO-optimized content briefs in seconds", icon: FileEdit, price: "$9", beta: true },
-  { name: "Content Calendar", description: "Plan and schedule your content publishing", icon: Calendar, price: "$9", beta: true },
-  { name: "Invoices", description: "Create and manage professional client invoices", icon: Receipt, price: "$9", beta: false },
-  { name: "Proposals", description: "AI-powered proposal generation that wins bids", icon: Presentation, price: "$9", beta: false },
-  { name: "Branding", description: "Custom brand colors and settings across all tools", icon: Palette, price: "$3", beta: false },
+const tools = [
+  {
+    name: "Brand Radar",
+    description: "Monitor how AI models talk about your clients' brands",
+    icon: Search,
+  },
+  {
+    name: "GEO Briefs",
+    description: "Actionable plans to improve AI visibility",
+    icon: TrendingUp,
+  },
+  {
+    name: "PDF Audit",
+    description: "Generate client-ready AI visibility audit reports",
+    icon: FileText,
+  },
 ]
 
 const tiers = [
-  { name: "Starter", price: "$19", yearly: "$190", features: 6, badge: "" },
-  { name: "Pro", price: "$49", yearly: "$490", features: 12, badge: "Most Popular" },
-  { name: "Agency", price: "$99", yearly: "$990", features: 17, badge: "" },
+  {
+    name: "Starter",
+    price: "$29",
+    yearly: "$290",
+    badge: "",
+    features: ["5 clients", "Weekly scans", "PDF audit"],
+  },
+  {
+    name: "Pro",
+    price: "$79",
+    yearly: "$790",
+    badge: "Most Popular",
+    features: ["20 clients", "Daily scans", "GEO briefs", "White-label"],
+  },
+  {
+    name: "Agency",
+    price: "$149",
+    yearly: "$1490",
+    badge: "",
+    features: ["Unlimited clients", "API access", "Priority support"],
+  },
 ]
 
-const benefits = [
+const stats = [
+  { value: "62%", label: "of brands are invisible in AI search" },
+  { value: "4.4x", label: "higher converting than organic search" },
+  { value: "$850M+", label: "GEO market by 2027" },
+]
+
+const faq = [
   {
-    icon: Zap,
-    title: "Zero dashboard fatigue",
-    description: "No login required for clients. Reports land in their inbox.",
+    q: "Which AI models do you support?",
+    a: "ChatGPT, Gemini, Claude, Perplexity, and 5+ more.",
   },
   {
-    icon: Sparkles,
-    title: "AI-native quality",
-    description: "Professional narrative prose, not robot bullet points.",
+    q: "How is this different from SEO monitoring?",
+    a: "SEO tracks Google rankings. We track AI recommendations. Different channel, different rules.",
   },
   {
-    icon: TrendingUp,
-    title: "Retain more clients",
-    description: "Clients who understand your reports stay longer.",
-  },
-  {
-    icon: Shield,
-    title: "Privacy-first",
-    description: "No tracking, no ads. Your data stays yours.",
+    q: "Can I white-label the reports?",
+    a: "Yes, Pro and Agency plans include full white-labeling.",
   },
 ]
 
@@ -90,55 +103,82 @@ export default function MarketingPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(139,165,190,0.06),transparent_50%)]" />
         <div className="mx-auto max-w-7xl px-6 text-center relative">
           <Badge variant="secondary" className="mb-6">
-            Beta — 17 AI-powered tools for agencies
+            AI Visibility Monitoring for Agencies
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Your agency toolkit,{" "}
-            <span className="text-accent">your way</span>
-            <br />
-            Pick only what you need
+            Does AI recommend{" "}
+            <span className="text-accent">your clients?</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            AI-powered reports, brand monitoring, competitive analysis, content
-            briefs, calendar, invoices, proposals, and branding. Use one or all.
+            Kvant shows you exactly what ChatGPT, Gemini, and Claude say about
+            every brand you manage. See the gaps. Fix them. Keep your clients.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/register">
-                Start Free Trial <ArrowRight className="ml-1 h-4 w-4" />
+                Scan Your First Client Free <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="#tools">See Tools</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* All Tools */}
-      <section id="tools" className="relative py-24">
+      {/* Problem */}
+      <section className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <h2 className="text-3xl font-bold">
+            Your clients are asking AI about their industry right now.
+          </h2>
+          <p className="mt-6 text-lg text-muted-foreground">
+            If AI doesn&apos;t mention them — they&apos;re invisible. And you have no way
+            to check.
+          </p>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold">How It Works</h2>
+          </div>
+          <div className="mt-16 grid gap-8 md:grid-cols-3">
+            {[
+              { step: "1", title: "Enter client domain + competitors" },
+              { step: "2", title: "Kvant scans 5 AI models in 60 seconds" },
+              { step: "3", title: "Get a PDF audit you can share with your client" },
+            ].map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent text-xl font-bold">
+                  {s.step}
+                </div>
+                <p className="font-medium">{s.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tools */}
+      <section id="tools" className="relative py-24 border-t border-white/5">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,156,99,0.03),transparent_70%)]" />
         <div className="mx-auto max-w-7xl px-6 relative">
           <div className="text-center">
-            <h2 className="text-3xl font-bold">All your agency tools in one place</h2>
+            <h2 className="text-3xl font-bold">3 Tools, Zero Bloat</h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Pick exactly what you need. Build your own plan.
+              Everything you need to prove AI visibility ROI to your clients.
             </p>
           </div>
-          <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {ALL_FEATURES_MARKETING.map((f) => {
-              const Icon = f.icon
+          <div className="mt-16 grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
+            {tools.map((t) => {
+              const Icon = t.icon
               return (
-                <div key={f.name} className="group relative rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-all">
+                <div key={t.name} className="group relative rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-all">
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
                     <Icon className="h-5 w-5 text-accent" />
                   </div>
-                  <h3 className="font-semibold">
-                    {f.name}
-                    {f.beta && <span className="ml-2 rounded bg-accent/20 px-1.5 py-0.5 text-xs text-accent">Beta</span>}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
-                  <p className="mt-4 text-sm"><span className="text-lg font-bold">{f.price}</span><span className="text-muted-foreground">/mo</span></p>
+                  <h3 className="font-semibold">{t.name}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{t.description}</p>
                 </div>
               )
             })}
@@ -146,20 +186,14 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* Pricing Tiers */}
+      {/* Pricing */}
       <section id="pricing" className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-6 relative">
           <div className="text-center">
             <h2 className="text-3xl font-bold">Simple, transparent pricing</h2>
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Pick only the tools you need. Beta pricing — locked in forever for early users.
+              Start free. Scale as you land more clients.
             </p>
-          </div>
-          <div className="mt-8 flex justify-center">
-            <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 p-2 text-sm text-muted-foreground">
-              <Check className="h-4 w-4 text-accent" />
-              Mix and match from 17 AI-powered tools
-            </div>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
             {tiers.map((tier) => (
@@ -172,13 +206,20 @@ export default function MarketingPage() {
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h3 className="text-lg font-semibold">{tier.name}</h3>
-                    <p className="text-sm text-muted-foreground">{tier.features} tools included</p>
                   </div>
                   <div>
                     <span className="text-3xl font-bold">{tier.price}</span>
                     <span className="text-sm text-muted-foreground">/mo</span>
                   </div>
                   <p className="text-xs text-muted-foreground">or {tier.yearly}/yr (2 months free)</p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {tier.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2">
+                        <Zap className="h-3 w-3 text-accent" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                   <Button size="sm" className="w-full" asChild>
                     <Link href="/register">
                       Get Started <ArrowRight className="ml-1 h-3 w-3" />
@@ -191,60 +232,33 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* Features Bento */}
-      <section id="features" className="relative py-24 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold">Built for agencies, by builders</h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-              Every feature exists because real agency owners asked for it.
-            </p>
-          </div>
-          <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {benefits.map((b, i) => {
-              const Icon = b.icon
-              return (
-                <div
-                  key={b.title}
-                  className="group relative rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:bg-white/[0.04] transition-all"
-                >
-                  <div className="absolute top-0 right-0 h-24 w-24 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-all" />
-                  <div className="relative">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                      <Icon className="h-5 w-5 text-accent" />
-                    </div>
-                    <h3 className="font-semibold">{b.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                      {b.description}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* Stats */}
       <section className="relative py-24 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-6">
           <div className="grid gap-8 sm:grid-cols-3">
-            {[
-              { icon: Users, value: "85%", label: "Clients retained" },
-              { icon: MessageSquare, value: "10x", label: "Report read rate" },
-              { icon: Eye, value: "50+", label: "LLMs monitored" },
-            ].map((s) => {
-              const Icon = s.icon
-              return (
-                <div key={s.label} className="text-center">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10">
-                    <Icon className="h-6 w-6 text-accent" />
-                  </div>
-                  <div className="text-3xl font-bold">{s.value}</div>
-                  <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
-                </div>
-              )
-            })}
+            {stats.map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-3xl font-bold text-accent">{s.value}</div>
+                <div className="mt-2 text-sm text-muted-foreground">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="relative py-24 border-t border-white/5">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
+          </div>
+          <div className="mt-12 space-y-6">
+            {faq.map((f) => (
+              <div key={f.q} className="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+                <h3 className="font-semibold">{f.q}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -253,14 +267,14 @@ export default function MarketingPage() {
       <section className="relative py-24 border-t border-white/5 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,156,99,0.06),transparent_60%)]" />
         <div className="mx-auto max-w-3xl px-6 text-center relative">
-          <h2 className="text-3xl font-bold">Ready to impress your clients?</h2>
+          <h2 className="text-3xl font-bold">Ready to see how AI sees your clients?</h2>
           <p className="mt-4 text-muted-foreground">
             Start free. No credit card required. Cancel anytime.
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button size="lg" asChild>
               <Link href="/register">
-                Start Free Trial <ArrowRight className="ml-1 h-4 w-4" />
+                Scan Your First Client Free <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
           </div>
