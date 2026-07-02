@@ -82,20 +82,20 @@ export const TIER_LIMITS: Record<TierSlug, {
 
 export const TIER_PRICES: Record<TierSlug, { monthly: string; yearly: string; price: number; name: string }> = {
     starter: {
-        monthly: "pri_01kvy9pwaf66by4qgjkx8g7kwc",
-        yearly: "pri_01kvy9pwhcaqv3hw9htb1atdjy",
+        monthly: "pri_01kwgcq6m01cvxmza1y4b5e1rm",
+        yearly: "pri_01kwgcq6tg7y9jk8fv81q58kmm",
         price: 29,
         name: "Starter",
     },
     pro: {
-        monthly: "pri_01kvy9pwq6qvyjjx07xqc3nefz",
-        yearly: "pri_01kvy9pwx26yavq3g8par41qv7",
+        monthly: "pri_01kwgcq70h57v4xd8101ywy9cc",
+        yearly: "pri_01kwgcq76scde823dkcffewmg2",
         price: 79,
         name: "Pro",
     },
     agency: {
-        monthly: "pri_01kvy9px2m86yd5avmf1brqqfr",
-        yearly: "pri_01kvy9px8b727m5apentsh6n89",
+        monthly: "pri_01kwgcq7db642qd6vnpqrs5tkt",
+        yearly: "pri_01kwgcq7k316qa31zv9cd5gcxt",
         price: 149,
         name: "Agency",
     },
