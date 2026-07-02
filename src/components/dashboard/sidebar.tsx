@@ -3,32 +3,18 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, BarChart3, FileEdit, Calendar, Receipt, Presentation, Settings, X, ScanLine, Globe, Zap, Gift, TrendingUp, Users, Mail, SearchCode, Activity } from "lucide-react"
+import { FileText, Search, LayoutDashboard, CreditCard, Link2, LogOut, Settings, Globe, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/seo-audit", label: "SEO Audit", icon: Activity },
-  { href: "/dashboard/analytics", label: "Analytics Hub", icon: TrendingUp },
-  { href: "/dashboard/reports", label: "Narrative Reports", icon: FileText },
-  { href: "/dashboard/seo", label: "Brand Radar", icon: Search },
-  { href: "/dashboard/competitive", label: "Competitive Dashboard", icon: BarChart3 },
-  { href: "/dashboard/keyword-rankings", label: "Rank Tracker", icon: SearchCode },
-  { href: "/dashboard/content-briefs", label: "Content Briefs", icon: FileEdit },
-  { href: "/dashboard/content-calendar", label: "Content Calendar", icon: Calendar },
-  { href: "/dashboard/invoices", label: "Invoices", icon: Receipt },
-  { href: "/dashboard/proposals", label: "Proposals", icon: Presentation },
-  { href: "/dashboard/client-portal", label: "Client Portal", icon: Users },
-  { href: "/dashboard/scheduled-reports", label: "Scheduled Reports", icon: Mail },
-  { href: "/dashboard/citation-audit", label: "AI Citation Audit", icon: ScanLine },
-  { href: "/dashboard/aeo", label: "AEO Foundations", icon: Globe },
-  { href: "/dashboard/agentic", label: "Agentic Readiness", icon: Zap },
-  { href: "/dashboard/referrals", label: "Referrals", icon: Gift },
-  { href: "/dashboard/backlinks", label: "Backlinks", icon: Link2 },
+  { href: "/dashboard/brand-radar", label: "Brand Radar", icon: Search },
+  { href: "/dashboard/geo-briefs", label: "GEO Briefs", icon: Globe },
+  { href: "/dashboard/pdf-audit", label: "PDF Audit", icon: FileText },
   { href: "/dashboard/connections", label: "Connections", icon: Link2 },
-  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/dashboard/subscriptions", label: "Subscription", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
