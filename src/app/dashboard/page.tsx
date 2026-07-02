@@ -131,20 +131,20 @@ export default function DashboardPage() {
           title="Brand Monitors"
           icon={Search}
           end={stats?.monitorCount || 0}
-          href="/dashboard/seo"
+          href="/dashboard/brand-radar"
         />
         <AnimatedStatCard
           title="Content Briefs"
           icon={PenSquare}
           end={stats?.briefCount || 0}
-          href="/dashboard/content-briefs"
+          href="/dashboard/geo-briefs"
         />
         <AnimatedStatCard
           title="Revenue"
           icon={DollarSign}
           end={stats?.totalRevenue || 0}
           unit="$"
-          href="/dashboard/invoices"
+          href="/dashboard/pdf-audit"
         />
       </div>
 
@@ -189,11 +189,11 @@ export default function DashboardPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><FileText className="h-4 w-4 text-accent" /></div>
               <div><p className="text-sm font-medium">New Report</p><p className="text-xs text-muted-foreground">Generate a client report with AI</p></div>
             </Link>
-            <Link href="/dashboard/content-briefs" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
+            <Link href="/dashboard/geo-briefs" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><PenSquare className="h-4 w-4 text-accent" /></div>
-              <div><p className="text-sm font-medium">Content Brief</p><p className="text-xs text-muted-foreground">Create an SEO content brief</p></div>
+              <div><p className="text-sm font-medium">GEO Briefs</p><p className="text-xs text-muted-foreground">Generate AI visibility briefs</p></div>
             </Link>
-            <Link href="/dashboard/seo" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
+            <Link href="/dashboard/brand-radar" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><Search className="h-4 w-4 text-accent" /></div>
               <div><p className="text-sm font-medium">Brand Scan</p><p className="text-xs text-muted-foreground">Scan LLMs for brand mentions</p></div>
             </Link>

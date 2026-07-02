@@ -264,7 +264,7 @@ export default function SEOAuditPage() {
               <CardDescription>Brand mentions across LLMs</CardDescription>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/dashboard/citation-audit">View All <ChevronRight className="h-3 w-3 ml-0.5" /></Link>
+              <Link href="/dashboard/pdf-audit">View All <ChevronRight className="h-3 w-3 ml-0.5" /></Link>
             </Button>
           </CardHeader>
           <CardContent className="space-y-2">

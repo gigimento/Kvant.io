@@ -42,15 +42,6 @@ vi.mock("@/lib/paddle/client", () => ({
   },
 }))
 
-vi.mock("@/lib/llm/prompts/proposal", () => ({
-  buildProposalPrompt: vi.fn().mockReturnValue({ systemPrompt: "sys", userPrompt: "usr" }),
-}))
-
-vi.mock("@/lib/llm/prompts/content-brief", () => ({
-  buildContentBriefSystemPrompt: vi.fn().mockReturnValue("sys"),
-  buildContentBriefUserPrompt: vi.fn().mockReturnValue("usr"),
-}))
-
 vi.mock("@/lib/llm/prompts/narrative", () => ({
   buildNarrativePrompt: vi.fn().mockReturnValue("Generate a narrative report"),
 }))
@@ -129,11 +120,6 @@ describe("API Routes — Subscription Gated", () => {
   const gatedRoutes: { path: string; method: string; body: any; slug: string }[] = [
     { path: "@/app/api/reports/generate/route", method: "POST", body: { configId: "cfg_1" }, slug: "reports" },
     { path: "@/app/api/seo/scan/route", method: "POST", body: { monitorId: "mon_1" }, slug: "seo" },
-    { path: "@/app/api/citation-audit/scan/route", method: "POST", body: { brand_name: "TestBrand" }, slug: "citation-audit" },
-    { path: "@/app/api/content-briefs/generate/route", method: "POST", body: { keyword: "test" }, slug: "content-briefs" },
-    { path: "@/app/api/proposals/generate/route", method: "POST", body: { clientName: "Client", projectScope: "Web redesign" }, slug: "proposals" },
-    { path: "@/app/api/aeo/analyze/route", method: "POST", body: { url: "https://example.com" }, slug: "aeo" },
-    { path: "@/app/api/agentic/analyze/route", method: "POST", body: { url: "https://example.com" }, slug: "agentic" },
   ]
 
   for (const route of gatedRoutes) {
