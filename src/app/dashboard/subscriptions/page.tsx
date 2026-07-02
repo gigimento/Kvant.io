@@ -7,15 +7,41 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { Check, Loader, ArrowRight, Minus, Plus } from "lucide-react"
+import { Check, Loader, ArrowRight, Shield, Zap, Building2 } from "lucide-react"
 import {
   TIER_INFO,
   TIER_PRICES,
-  ALL_FEATURES,
-  getRecommendedTier,
-  getTierCount,
+  TIER_LIMITS,
   type TierSlug,
 } from "@/lib/features"
+
+const TIER_ICONS: Record<TierSlug, any> = {
+  starter: Shield,
+  pro: Zap,
+  agency: Building2,
+}
+
+const TIER_FEATURES: Record<TierSlug, string[]> = {
+  starter: [
+    "5 clients",
+    "Weekly brand scans",
+    "PDF audit reports",
+    "Brand Radar + PDF Audit",
+  ],
+  pro: [
+    "20 clients",
+    "Daily brand scans",
+    "GEO briefs",
+    "White-label reports",
+    "All Starter features",
+  ],
+  agency: [
+    "Unlimited clients",
+    "API access",
+    "Priority support",
+    "All Pro features",
+  ],
+}
 
 export default function SubscriptionsPage() {
   const router = useRouter()
@@ -28,7 +54,6 @@ export default function SubscriptionsPage() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState("")
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(ALL_FEATURES.map((f) => f.slug))
 
   useEffect(() => {
     const supabase = createClient()
@@ -50,26 +75,6 @@ export default function SubscriptionsPage() {
     })
   }, [router])
 
-  function toggleFeature(slug: string) {
-    setSelectedFeatures((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
-    )
-  }
-
-  function selectAll() {
-    setSelectedFeatures(ALL_FEATURES.map((f) => f.slug))
-  }
-
-  function deselectAll() {
-    setSelectedFeatures([])
-  }
-
-  const selectedCount = selectedFeatures.length
-  const recommendedTier = getRecommendedTier(selectedCount)
-  const tierFeaturesCount = getTierCount(recommendedTier)
-  const price = TIER_PRICES[recommendedTier]
-  const amount = plan === "monthly" ? price.price : price.price * 10
-
   async function handleCheckout(tier: TierSlug) {
     setCheckoutLoading(tier)
     setCheckoutError("")
@@ -77,7 +82,7 @@ export default function SubscriptionsPage() {
       const res = await fetch("/api/paddle/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, plan, features: selectedFeatures }),
+        body: JSON.stringify({ tier, plan }),
       })
       const data = await res.json()
       if (data.checkoutUrl) {
@@ -111,7 +116,7 @@ export default function SubscriptionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Subscriptions</h1>
-          <p className="text-muted-foreground">Pick your tools, pay only for what you need</p>
+          <p className="text-muted-foreground">Choose the plan that fits your agency</p>
         </div>
         {activeSub && (
           <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-400">Active</span>
@@ -166,134 +171,93 @@ export default function SubscriptionsPage() {
         <button onClick={() => setPlan("yearly")} className={cn("rounded-md px-4 py-1.5 text-sm font-medium transition-colors", plan === "yearly" ? "bg-accent text-white" : "text-muted-foreground hover:text-white")}>Yearly <span className="text-xs text-green-400 ml-1">Save 17%</span></button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Tool selector */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Your tools ({selectedCount}/{ALL_FEATURES.length})</h2>
-            <div className="flex gap-2">
-              <button onClick={selectAll} className="text-xs text-muted-foreground hover:text-white transition-colors">Select All</button>
-              <button onClick={deselectAll} className="text-xs text-muted-foreground hover:text-white transition-colors">Clear</button>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {ALL_FEATURES.map((f) => {
-              const Icon = f.icon
-              const selected = selectedFeatures.includes(f.slug)
-              return (
-                <button
-                  key={f.slug}
-                  onClick={() => toggleFeature(f.slug)}
-                  className={cn(
-                    "flex items-start gap-3 rounded-xl border p-4 text-left transition-all",
-                    selected
-                      ? "border-accent/50 bg-accent/5"
-                      : "border-white/5 bg-white/[0.02] hover:bg-white/[0.04]"
-                  )}
-                >
-                  <div className={cn(
-                    "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors",
-                    selected ? "bg-accent border-accent text-white" : "border-white/20"
-                  )}>
-                    {selected ? <Check className="h-3 w-3" /> : null}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-accent shrink-0" />
-                      <span className="text-sm font-medium">{f.name}</span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{f.description}</p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+      {/* Tier cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {(["starter", "pro", "agency"] as TierSlug[]).map((tier) => {
+          const info = TIER_INFO[tier]
+          const p = TIER_PRICES[tier]
+          const a = plan === "monthly" ? p.price : p.price * 10
+          const isActive = activeSub && userTier === tier
+          const limits = TIER_LIMITS[tier]
+          const Icon = TIER_ICONS[tier]
+          const features = TIER_FEATURES[tier]
+          const isPopular = tier === "pro"
 
-        {/* Summary card */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Summary</CardTitle>
+          return (
+            <Card
+              key={tier}
+              className={cn(
+                "relative flex flex-col",
+                isPopular && "border-accent/50",
+                isActive && "border-green-500/30"
+              )}
+            >
+              {isPopular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-accent text-white">Most Popular</Badge>
+                </div>
+              )}
+              {isActive && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-green-500 text-white">Current Plan</Badge>
+                </div>
+              )}
+              <CardHeader className="text-center pb-2">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+                  <Icon className="h-6 w-6 text-accent" />
+                </div>
+                <CardTitle className="text-xl">{info.name}</CardTitle>
+                <CardDescription>{info.label}</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">${a}</span>
+                  <span className="text-muted-foreground">/{plan === "monthly" ? "mo" : "yr"}</span>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tools selected</span>
-                  <span className="font-medium">{selectedCount}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Recommended plan</span>
-                  <Badge variant="secondary">{TIER_INFO[recommendedTier].name}</Badge>
-                </div>
-                <div className="border-t border-white/5 pt-4">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold">${amount}</span>
-                    <span className="text-sm text-muted-foreground">/{plan === "monthly" ? "mo" : "yr"}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {TIER_INFO[recommendedTier].label} &middot; up to {tierFeaturesCount} tools
-                  </p>
-                </div>
-                {selectedCount > 0 && !activeSub && (
-                  <>
+              <CardContent className="flex-1 flex flex-col">
+                <ul className="space-y-3 flex-1">
+                  {features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-accent shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6">
+                  {isActive ? (
+                    <Button className="w-full" variant="outline" disabled>
+                      Current Plan
+                    </Button>
+                  ) : (
                     <Button
                       className="w-full"
-                      size="lg"
-                      disabled={checkoutLoading === recommendedTier}
-                      onClick={() => handleCheckout(recommendedTier)}
+                      variant={isPopular ? "default" : "outline"}
+                      disabled={checkoutLoading === tier}
+                      onClick={() => handleCheckout(tier)}
                     >
-                      {checkoutLoading === recommendedTier ? <Loader className="h-4 w-4 animate-spin" /> : `Subscribe to ${TIER_INFO[recommendedTier].name}`}
-                      {!checkoutLoading && <ArrowRight className="ml-1 h-4 w-4" />}
+                      {checkoutLoading === tier ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          Get Started
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
-                    <p className="text-xs text-center text-muted-foreground">14-day free trial &middot; No credit card required</p>
-                  </>
-                )}
-                {selectedCount === 0 && (
-                  <p className="text-xs text-center text-muted-foreground">Select at least one tool to continue</p>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
-
-            {/* Quick tier links */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground text-center">Or choose a plan directly:</p>
-              <div className="grid grid-cols-3 gap-2">
-                {(["starter", "pro", "agency"] as TierSlug[]).map((tier) => {
-                  const info = TIER_INFO[tier]
-                  const p = TIER_PRICES[tier]
-                  const a = plan === "monthly" ? p.price : p.price * 10
-                  const isActive = activeSub && userTier === tier
-                  return (
-                    <button
-                      key={tier}
-                      onClick={() => !isActive && handleCheckout(tier)}
-                      disabled={isActive || checkoutLoading === tier}
-                      className={cn(
-                        "rounded-lg border p-3 text-center transition-all text-sm",
-                        isActive ? "border-accent/50 bg-accent/5" : "border-white/5 hover:bg-white/[0.04]"
-                      )}
-                    >
-                      <div className="font-medium">{info.name}</div>
-                      <div className="text-lg font-bold">${a}</div>
-                      <div className="text-xs text-muted-foreground">/{plan === "monthly" ? "mo" : "yr"}</div>
-                      {isActive && <div className="text-xs text-accent mt-1">Current</div>}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
+          )
+        })}
       </div>
 
       {checkoutError && <p className="text-center text-sm text-red-400">{checkoutError}</p>}
 
-      {/* All features reference */}
+      {/* Feature comparison */}
       <Card>
         <CardHeader>
-          <CardTitle>All Features</CardTitle>
-          <CardDescription>What each plan includes</CardDescription>
+          <CardTitle>Compare Plans</CardTitle>
+          <CardDescription>See what's included in each tier</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -307,20 +271,54 @@ export default function SubscriptionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {ALL_FEATURES.map((f) => (
-                  <tr key={f.slug} className="border-b border-white/5">
-                    <td className="py-3 pr-4">{f.name}</td>
-                    {(["starter", "pro", "agency"] as TierSlug[]).map((t) => {
-                      const featureTierIndex = ["starter", "pro", "agency"].indexOf(f.tier)
-                      const tierIndex = ["starter", "pro", "agency"].indexOf(t)
-                      return (
-                        <td key={t} className="text-center py-3 px-4">
-                          {featureTierIndex <= tierIndex ? <Check className="mx-auto h-4 w-4 text-accent" /> : <span className="text-muted-foreground/30">&mdash;</span>}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">Clients</td>
+                  <td className="text-center py-3 px-4">5</td>
+                  <td className="text-center py-3 px-4">20</td>
+                  <td className="text-center py-3 px-4">Unlimited</td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">Scan Frequency</td>
+                  <td className="text-center py-3 px-4">Weekly</td>
+                  <td className="text-center py-3 px-4">Daily</td>
+                  <td className="text-center py-3 px-4">Daily</td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">Brand Radar</td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">PDF Audit</td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">GEO Briefs</td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">White-Label</td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
+                <tr className="border-b border-white/5">
+                  <td className="py-3 pr-4">API Access</td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4">Priority Support</td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><span className="text-muted-foreground/30">&mdash;</span></td>
+                  <td className="text-center py-3 px-4"><Check className="mx-auto h-4 w-4 text-accent" /></td>
+                </tr>
               </tbody>
             </table>
           </div>
