@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileText, Search, TrendingUp, ArrowUp, ArrowDown, DollarSign, PenSquare } from "lucide-react"
+import { FileText, Search, ArrowUp, ArrowDown, PenSquare, ClipboardCheck } from "lucide-react"
 import { useAnimatedCounter } from "@/lib/use-animated-counter"
 import { ConnectionWarning } from "@/components/dashboard/connection-warning"
 
@@ -13,13 +13,8 @@ interface DashboardStats {
   reportCount: number
   monitorCount: number
   briefCount: number
-  calendarEntries: number
-  thisMonthReports: number
-  trendDelta: number
-  trendUp: boolean
-  totalRevenue: number
-  paidInvoiceCount: number
-  recentReports: { id: string; created_at: string }[]
+  activeSubscriptions: number
+  recentMonitors: { id: string; created_at: string; brand_name: string }[]
 }
 
 function AnimatedStatCard({
@@ -118,62 +113,57 @@ export default function DashboardPage() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <AnimatedStatCard
-          title="Reports"
-          icon={FileText}
-          end={stats?.reportCount || 0}
-          trend={stats && stats.thisMonthReports > 0
-            ? `${stats.trendDelta > 0 ? "+" : ""}${stats.trendDelta}% this month`
-            : undefined}
-          trendUp={stats?.trendUp}
-          href="/dashboard/reports"
-        />
-        <AnimatedStatCard
-          title="Brand Monitors"
+          title="Brand Scans"
           icon={Search}
           end={stats?.monitorCount || 0}
           href="/dashboard/brand-radar"
         />
         <AnimatedStatCard
-          title="Content Briefs"
+          title="GEO Briefs"
           icon={PenSquare}
           end={stats?.briefCount || 0}
           href="/dashboard/geo-briefs"
         />
         <AnimatedStatCard
-          title="Revenue"
-          icon={DollarSign}
-          end={stats?.totalRevenue || 0}
-          unit="$"
+          title="PDF Audits"
+          icon={ClipboardCheck}
+          end={stats?.reportCount || 0}
           href="/dashboard/pdf-audit"
+        />
+        <AnimatedStatCard
+          title="Subscriptions"
+          icon={FileText}
+          end={stats?.activeSubscriptions || 0}
+          href="/dashboard/subscriptions"
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Recent Reports</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Recent Brand Scans</CardTitle>
           </CardHeader>
           <CardContent>
-            {stats && stats.reportCount > 0 ? (
+            {stats && stats.monitorCount > 0 ? (
               <div className="space-y-0">
-                {(stats.recentReports || []).map((r, i) => (
-                  <div key={r.id} className="reveal flex items-center justify-between border-b border-border py-3 last:border-0"
+                {(stats.recentMonitors || []).map((m, i) => (
+                  <div key={m.id} className="reveal flex items-center justify-between border-b border-border py-3 last:border-0"
                     style={{ transitionDelay: `${i * 60}ms` }}>
-                    <Link href={`/dashboard/reports/${r.id}`} className="text-sm font-medium hover:text-accent transition-colors">
-                      Report generated
+                    <Link href={`/dashboard/brand-radar/${m.id}`} className="text-sm font-medium hover:text-accent transition-colors">
+                      {m.brand_name || "Brand scan"}
                     </Link>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString()}
+                      {new Date(m.created_at).toLocaleDateString()}
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
-                <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">No reports yet</p>
-                <Link href="/dashboard/reports/new" className="mt-3 inline-block text-sm text-accent hover:underline">
-                  Create your first report
+                <Search className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">No brand scans yet</p>
+                <Link href="/dashboard/brand-radar/new" className="mt-3 inline-block text-sm text-accent hover:underline">
+                  Start your first scan
                 </Link>
               </div>
             )}
@@ -185,17 +175,17 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/dashboard/reports/new" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><FileText className="h-4 w-4 text-accent" /></div>
-              <div><p className="text-sm font-medium">New Report</p><p className="text-xs text-muted-foreground">Generate a client report with AI</p></div>
-            </Link>
-            <Link href="/dashboard/geo-briefs" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><PenSquare className="h-4 w-4 text-accent" /></div>
-              <div><p className="text-sm font-medium">GEO Briefs</p><p className="text-xs text-muted-foreground">Generate AI visibility briefs</p></div>
-            </Link>
-            <Link href="/dashboard/brand-radar" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
+            <Link href="/dashboard/brand-radar/new" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><Search className="h-4 w-4 text-accent" /></div>
-              <div><p className="text-sm font-medium">Brand Scan</p><p className="text-xs text-muted-foreground">Scan LLMs for brand mentions</p></div>
+              <div><p className="text-sm font-medium">New Brand Scan</p><p className="text-xs text-muted-foreground">Scan LLMs for brand mentions</p></div>
+            </Link>
+            <Link href="/dashboard/geo-briefs/new" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><PenSquare className="h-4 w-4 text-accent" /></div>
+              <div><p className="text-sm font-medium">Generate GEO Brief</p><p className="text-xs text-muted-foreground">Create actionable visibility plans</p></div>
+            </Link>
+            <Link href="/dashboard/pdf-audit/new" className="flex items-center gap-3 rounded-lg border border-white/5 p-3 hover:bg-white/[0.03] transition-colors">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10"><ClipboardCheck className="h-4 w-4 text-accent" /></div>
+              <div><p className="text-sm font-medium">Create PDF Audit</p><p className="text-xs text-muted-foreground">Generate client-ready audit reports</p></div>
             </Link>
           </CardContent>
         </Card>
