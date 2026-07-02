@@ -51,28 +51,28 @@ export const ALL_FEATURES: Feature[] = [
 ]
 
 export const TIER_LIMITS: Record<TierSlug, {
-    clients: number | "unlimited"
+    maxClients: number | "unlimited"
     scanFrequency: "weekly" | "daily"
     geoBriefs: boolean
     whiteLabel: boolean
     apiAccess: boolean
 }> = {
     starter: {
-        clients: 5,
+        maxClients: 5,
         scanFrequency: "weekly",
         geoBriefs: false,
         whiteLabel: false,
         apiAccess: false,
     },
     pro: {
-        clients: 20,
+        maxClients: 20,
         scanFrequency: "daily",
         geoBriefs: true,
         whiteLabel: true,
         apiAccess: false,
     },
     agency: {
-        clients: "unlimited",
+        maxClients: "unlimited",
         scanFrequency: "daily",
         geoBriefs: true,
         whiteLabel: true,

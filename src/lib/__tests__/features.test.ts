@@ -82,9 +82,9 @@ describe("features", () => {
     })
 
     it("TIER_LIMITS has correct client limits", () => {
-        expect(TIER_LIMITS.starter.clients).toBe(5)
-        expect(TIER_LIMITS.pro.clients).toBe(20)
-        expect(TIER_LIMITS.agency.clients).toBe("unlimited")
+        expect(TIER_LIMITS.starter.maxClients).toBe(5)
+        expect(TIER_LIMITS.pro.maxClients).toBe(20)
+        expect(TIER_LIMITS.agency.maxClients).toBe("unlimited")
     })
 
     it("getRecommendedTier returns correct tier", () => {
